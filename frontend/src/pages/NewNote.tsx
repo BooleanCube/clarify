@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from "react";
+import Groq from "groq-sdk";
+import fs from "fs";
+import path from "path";
+
+const groq = new Groq({ apiKey: import.meta.env.VITE_GROQ_API_KEY, dangerouslyAllowBrowser: true });
 
 import * as pdfjsLib from "pdfjs-dist";
 pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdf.worker.min.mjs";
@@ -6,6 +11,31 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdf.worker.min.mjs";
 
 
 const NewNote: React.FC = () => {
+
+  // text - to - speech trial
+  // useEffect(() => {
+  //   const fetchGroqResponse = async () => {
+  //     console.log("Fetching Groq API response...");
+  //     try {
+  //       const response = await groq.chat.completions.create({
+  //         messages: [
+  //           {
+  //             role: "user",
+  //             content: "Explain the importance of fast language models",
+  //           },
+  //         ],
+  //         model: "llama-3.3-70b-versatile", // Specify the model
+  //       });
+
+  //       // Log the response content
+  //       console.log("Groq API Response:", response.choices[0]?.message?.content || "No content received");
+  //     } catch (error) {
+  //       console.error("Error fetching Groq API response:", error);
+  //     }
+  //   };
+
+  //   fetchGroqResponse(); // Call the function inside useEffect
+  // }, []); // Empty dependency array to run only once
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pdfText, setPdfText] = useState<string>("");
@@ -22,6 +52,9 @@ const NewNote: React.FC = () => {
   const [chunkSize, setChunkSize] = useState<number>(3); // Default chunk size
   const [chunks, setChunks] = useState<string[]>([]); // Array to hold chunks
   const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0); // Index of the current chunk
+
+  const [audioUrl, setAudioUrl] = useState<string | null>(null); // URL for the audio file
+  const [loadingAudio, setLoadingAudio] = useState<boolean>(false); // Loading state for audio file
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -99,7 +132,34 @@ const NewNote: React.FC = () => {
     }
   }, [chunkSize, pdfText]);
 
+  const generateAudio = async(text: string) => {
+    setLoadingAudio(true);
+    try{
+      const response = await groq.audio.speech.create({
+        model: "playai-tts",
+        voice: "Fritz-PlayAI",
+        input: text,
+        response_format: "wav",
+      });
 
+      const arrayBuffer = await response.arrayBuffer();
+      const blob = new Blob([new Uint8Array(arrayBuffer)], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+    } catch(error){
+      console.error("Error generating audio:", error);
+    } finally {
+      setLoadingAudio(false);
+    }
+  }
+
+  const handleGenerateAudio = () => {
+    if (chunks[currentChunkIndex]){
+      generateAudio(chunks[currentChunkIndex]);
+    } else {
+      alert("No text to generate audio for.");
+    }
+  }
   return (
     <div>
       <div className="p-6 max-w-md mx-auto">
@@ -289,6 +349,23 @@ const NewNote: React.FC = () => {
           >
             Next
           </button>
+        </div>
+        {/* Generate Audio Button */}
+        <div className="mt-4">
+          <button
+            onClick={handleGenerateAudio}
+            disabled={loadingAudio}
+            className="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              {loadingAudio ? "Generating Audio..." : "Generate Audio"}
+            </button>
+            {audioUrl && (
+              <div className="mt-4">
+                <audio controls src={audioUrl} className="w-full">
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
         </div>
       </div>
       )}
