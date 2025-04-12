@@ -2,6 +2,7 @@ import React, { ReactElement } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
 import { Middleware, useAuth } from './middleware'
+import AI from './pages/AI'
 
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -39,6 +40,9 @@ function App() {
           <Route path="/login" Component={Login} />
           <Route path="/register" Component={Register} />
           <Route path="/reset" Component={Reset} />
+          <Route path="/ai" Component={AI} />
+
+          
 
           <Route path="/*" Component={NotFound} />
 
