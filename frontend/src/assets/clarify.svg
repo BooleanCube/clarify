@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240.17 60.03">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        isolation: isolate;
+      }
+
+      .cls-2 {
+        letter-spacing: .04em;
+      }
+
+      .cls-2, .cls-3 {
+        font-family: Helvetica-Bold, Helvetica;
+        font-size: 36px;
+        font-weight: 700;
+      }
+
+      .cls-3 {
+        letter-spacing: .08em;
+      }
+    </style>
+  </defs>
+  <g id="Layer_2-2" data-name="Layer 2">
+    <g>
+      <path d="M30,.01l2.48,19.57c.18,2.41,2.02,3.58,3.85,2.01l6.78-4.7-4.7,6.78c-1.57,1.83-.4,4.67,2.01,4.85l19.57,1.48-19.57,2.48c-2.41.18-3.58,2.02-2.01,3.85l4.78,6.86-6.86-4.78c-1.83-1.57-3.67-.4-3.85,2.01l-2.48,19.57-2.48-19.57c-.18-2.41-2.02-3.58-3.85-2.01l-6.87,4.78,4.78-6.87c1.57-1.83.4-3.67-2.01-3.85L0,29.99l19.57-2.48c2.41-.18,3.58-2.02,2.01-3.85l-4.8-6.88,6.88,4.8c1.83,1.57,3.67.4,3.85-2.01L29.99,0h.01Z"/>
+      <g class="cls-1">
+        <text class="cls-3" transform="translate(68.35 42.72)"><tspan x="0" y="0">CLARIF</tspan></text>
+        <text class="cls-2" transform="translate(216.53 42.72)"><tspan x="0" y="0">Y</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
