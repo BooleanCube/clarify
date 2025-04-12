@@ -9,6 +9,7 @@ import Register from './pages/Register'
 import NewNote from './pages/NewNote'
 
 import Navbar from './components/ui/Navbar'
+import Footer from './components/ui/Footer'
 import Reset from './pages/Reset'
 import NotFound from './pages/NotFound'
 
@@ -44,6 +45,7 @@ function App() {
           {/* Authentication protected routes */}
           <Route path="/new" element={<ProtectedRoute Component={NewNote} />} />
         </Routes>
+        <Footer />
       </Router>
     </Middleware>
   )

@@ -8,3 +8,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@theme {
+  --color-offwhite: #E7E7E7;
+  --color-midgray: #D9D9D9;
+  --color-lightgray: #D9D9D9;
+  --color-darkgray: #B4B4B4;
+}
