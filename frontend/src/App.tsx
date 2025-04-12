@@ -8,6 +8,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import NewNote from './pages/NewNote'
+import Dashboard from './pages/Dashboard'
 
 import Navbar from './components/ui/Navbar'
 import Footer from './components/ui/Footer'
@@ -45,6 +46,8 @@ function App() {
           
 
           <Route path="/*" Component={NotFound} />
+          {/* Protected routes */}
+          <Route path="/dashboard" element={<ProtectedRoute Component={Dashboard} />} />
 
           {/* Authentication protected routes */}
           <Route path="/new" element={<ProtectedRoute Component={NewNote} />} />
