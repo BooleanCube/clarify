@@ -16,6 +16,21 @@ interface NoteProps {
   favorite: boolean;
 }
 
+interface Preset {
+  name: string;
+  fontSize: number;
+  lineHeight: number;
+  letterSpacing: number;
+  textColor: string;
+  backgroundColor: string;
+  fontFamily: string;
+  isBold: boolean;
+  isItalic: boolean;
+  isUnderline: boolean;
+  alignment: "left" | "center" | "right" | "justify";
+  chunkSize: number;
+}
+
 const Note: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,6 +62,82 @@ const Note: React.FC = () => {
   // Editing state for a single chunk (instead of whole note)
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedChunk, setEditedChunk] = useState<string>("");
+
+  const [presets, setPresets] = useState<Preset[]>([
+    {
+      name: "Default",
+      fontSize: 16,
+      lineHeight: 1.5,
+      letterSpacing: 0,
+      textColor: "#000000",
+      backgroundColor: "#ffffff",
+      fontFamily: "Garamond",
+      isBold: false,
+      isItalic: false,
+      isUnderline: false,
+      alignment: "left",
+      chunkSize: 30,
+    },
+    {
+      name: "High Contrast",
+      fontSize: 18,
+      lineHeight: 1.6,
+      letterSpacing: 1,
+      textColor: "#ffffff",
+      backgroundColor: "#000000",
+      fontFamily: "Arial, sans-serif",
+      isBold: true,
+      isItalic: false,
+      isUnderline: false,
+      alignment: "justify",
+      chunkSize: 40,
+    },
+  ]); // Dummy preset data
+
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const presetName = e.target.value;
+    setSelectedPreset(presetName);
+
+    const selectedPresetData = presets.find((p) => p.name === presetName);
+
+    if (selectedPresetData) {
+      setFontSize(selectedPresetData.fontSize);
+      setLineHeight(selectedPresetData.lineHeight);
+      setLetterSpacing(selectedPresetData.letterSpacing);
+      setTextColor(selectedPresetData.textColor);
+      setBackgroundColor(selectedPresetData.backgroundColor);
+      setFontFamily(selectedPresetData.fontFamily);
+      setIsBold(selectedPresetData.isBold);
+      setIsItalic(selectedPresetData.isItalic);
+      setIsUnderline(selectedPresetData.isUnderline);
+      setAlignment(selectedPresetData.alignment);
+      setChunkSize(selectedPresetData.chunkSize);
+    }
+  };
+
+  const handleSavedPreset = () => {
+    const presetName = window.prompt("Enter preset name:");
+    if (presetName) {
+      const newPreset: Preset = {
+        name: presetName,
+        fontSize: fontSize,
+        lineHeight: lineHeight,
+        letterSpacing: letterSpacing,
+        textColor: textColor,
+        backgroundColor: backgroundColor,
+        fontFamily: fontFamily,
+        isBold: isBold,
+        isItalic: isItalic,
+        isUnderline: isUnderline,
+        alignment: alignment,
+        chunkSize: chunkSize,
+      };
+
+      setPresets([...presets, newPreset]);
+      alert(`Preset "${presetName}" saved!`);
+    }
+  };
 
   // Fetch note data from Supabase based on URL ID
   useEffect(() => {
@@ -394,24 +485,66 @@ const Note: React.FC = () => {
               />
               <span className="text-sm">words</span>
             </div>
+            {/* Separator */}       
+            <div className="relative">
+                <select
+                    value={selectedPreset || ""}
+                    onChange={handlePresetChange}
+                    className="text-sm border rounded px-2 py-1"
+                >
+                  <option value="" disabled>
+                      Load Preset
+                  </option>
+                    {presets.map((preset) => (
+                        <option key={preset.name} value={preset.name}>
+                            {preset.name}
+                        </option>
+                    ))}
+                  <option value="save-current">Save Current Settings as Preset</option>
+                </select>
 
-            {/* Separator */}
-            <span className="text-gray-400">•</span>
+                {/* Save Current Preset Logic */}
+                {selectedPreset === "save-current" && (
+                    <div className="absolute top-full mt-2 bg-white border rounded shadow-md p-4 z-10">
+                        <p className="text-sm mb-2">Enter a name for your preset:</p>
+                        <input
+                            type="text"
+                            className="border rounded px-2 py-1 w-full text-sm"
+                            placeholder="Preset Name"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    const presetName = (e.target as HTMLInputElement).value.trim();
+                                    if (presetName) {
+                                        const newPreset: Preset = {
+                                            name: presetName,
+                                            fontSize: fontSize,
+                                            lineHeight: lineHeight,
+                                            letterSpacing: letterSpacing,
+                                            textColor: textColor,
+                                            backgroundColor: backgroundColor,
+                                            fontFamily: fontFamily,
+                                            isBold: isBold,
+                                            isItalic: isItalic,
+                                            isUnderline: isUnderline,
+                                            alignment: alignment,
+                                            chunkSize: chunkSize,
+                                        };
 
-            {/* Save Preset button */}
-            <button
-              onClick={handleSavePreset}
-              className="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center space-x-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Save Preset</span>
-            </button>
+                                        setPresets([...presets, newPreset]);
+                                        setSelectedPreset(null); // Reset dropdown
+                                        alert(`Preset "${presetName}" saved!`);
+                                    } else {
+                                        alert("Please enter a valid preset name.");
+                                    }
+                                }
+                            }}
+                        />
+                    </div>
+                )}
+            </div>
           </div>
         </>
       )}
-
       {/* Note content display / editing area */}
       {isEditing ? (
         <textarea
