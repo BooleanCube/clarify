@@ -295,15 +295,16 @@ const Dashboard: React.FC = () => {
   });
 
   return (
-    <div className="flex w-full bg-white/40">
+    <div className="flex w-full h-screen bg-white/40">
+      {/* Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 pt-24 z-30 bg-darkgray/80 border-[1.5px] shadow-md transition-all duration-300
-          ${showSidebar ? "w-64" : "w-20"}
+          fixed inset-y-0 left-0 pt-24 z-30 bg-darkgray border-[1.5px] shadow-md transition-all duration-300
+          ${showSidebar ? "w-full md:w-64" : "w-20"}
         `}
       >
         <div
-          className={`flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200 hover:border-black/50 ${
+          className={`flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200 ${
             showSidebar ? "px-4" : "justify-center"
           }`}
         >
@@ -357,15 +358,16 @@ const Dashboard: React.FC = () => {
         </nav>
       </div>
 
+      {/* Main Content */}
       <div
         className={`
-          flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "ml-64" : "ml-20"}
+          flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "md:ml-64" : "md:ml-20"}
         `}
       >
-        <main className="flex-1 p-6 m-12 pt-20 overflow-auto">
+        {/* Sticky Header for Dashboard Title & Global Controls */}
+        <header className="sticky pt-30 top-0 shadow-lg z-30 bg-gray-100/90 border-b border-gray-200 p-4">
           <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-          {/* Global Controls */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {tags.map((tag: Tag) => (
                 <span
@@ -409,6 +411,10 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
+        </header>
+
+        {/* Scrollable Notes Area */}
+        <main className="flex-1 overflow-auto p-4">
           <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
             <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
               + New Note
@@ -512,7 +518,7 @@ const Dashboard: React.FC = () => {
                           <FiTrash2
                             className="ml-1 hover:text-red-500 cursor-pointer"
                             onClick={(e) => {
-                              e.stopPropagation(); // Prevent note navigation
+                              e.stopPropagation();
                               handleDeleteNoteTag(note.id, tag.id);
                             }}
                           />
