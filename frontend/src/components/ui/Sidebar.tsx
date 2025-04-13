@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     >
       <div
         className={`
-          flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200 cursor-pointer 
+          flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-300 
           ${showSidebar ? "px-4" : "justify-center"}
         `}
         onClick={() => setShowSidebar((prev) => !prev)}
@@ -57,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={() => navigate("/dashboard")}
           className={`
-            w-full px-4 hover:cursor-pointer py-4 hover:bg-white/30 transition-all duration-200 
+            w-full px-4 hover:cursor-pointer py-4 hover:bg-white/30 transition-all duration-300 
             ${showSidebar ? "flex items-center space-x-2" : "flex justify-center"}
           `}
         >
@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={() => setShowFavorites((prev) => !prev)}
           className={`
-            w-full px-4 py-4 hover:bg-white/30 transition-all duration-200 
+            w-full px-4 py-4 hover:bg-white/30 transition-all duration-300 
             ${showSidebar ? "flex items-center space-x-2" : "flex justify-center"}
           `}
         >
