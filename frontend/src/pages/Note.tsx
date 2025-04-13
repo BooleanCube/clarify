@@ -9,6 +9,8 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true,
 });
 
+
+
 interface NoteProps {
   id: number;
   name: string;
@@ -207,18 +209,48 @@ const Note: React.FC = () => {
   const generateAudio = async (text: string) => {
     setLoadingAudio(true);
     try {
-      const response = await groq.audio.speech.create({
-        model: "playai-tts",
-        voice: "Fritz-PlayAI",
-        input: text,
-        response_format: "wav",
-      });
-      const arrayBuffer = await response.arrayBuffer();
-      const blob = new Blob([new Uint8Array(arrayBuffer)], { type: "audio/wav" });
-      const url = URL.createObjectURL(blob);
-      setAudioUrl(url);
+      const apiKey = import.meta.env.VITE_GOOGLE_CLOUD_TTS_API_KEY; //
+      if (!apiKey) {
+        console.error("Google Cloud TTS API key not found in environment variables.");
+        setLoadingAudio(false);
+        return;
+      }
+  
+      const response = await fetch(
+        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            input: { text: text },
+            voice: { languageCode: "fil-PH", name: "fil-ph-Neural2-A" }, // 
+            audioConfig: { audioEncoding: "MP3" },
+          }),
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error from Google Cloud TTS API:", errorData);
+        setLoadingAudio(false);
+        return;
+      }
+  
+      const data = await response.json();
+      console.log("Google Cloud TTS response:", data);
+  
+      if (data.audioContent) {
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(data.audioContent), (c) => c.charCodeAt(0))],
+          { type: "audio/mp3" }
+        );
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+      } else {
+        console.error("No audio content received from Google Cloud TTS.");
+      }
     } catch (error) {
-      console.error("Error generating audio:", error);
+      console.error("Error calling Google Cloud TTS API:", error);
     } finally {
       setLoadingAudio(false);
     }
@@ -297,7 +329,6 @@ const Note: React.FC = () => {
       {note && (
         <>
           <h2 className="mt-24 text-xl font-semibold text-center">{note.name}</h2>
-
           {/* Chunk editing controls */}
           <div className="mt-2 text-center space-x-2">
             {isEditing ? (
