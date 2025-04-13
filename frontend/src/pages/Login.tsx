@@ -1,10 +1,9 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+import {FormEvent, useState } from "react";
 import supabase from "@/supabase-client";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
 import Google from '../assets/web_neutral_rd_na.svg';
 
 import { Link } from "react-router-dom";
@@ -73,7 +72,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full bg-pearl h-auto min-h-[calc(100vh-10rem)] justify-center pt-28 sm:pt-32 pb-16">
+    <div className="flex flex-col items-center w-full bg-pearl h-auto min-h-[calc(100vh-10rem)] justify-center pt-28 sm:pt-32 pb-16" id="login">
   <p className=" text-4xl pb-1 font-extrabold">Welcome back to Clarify</p>
   <p className="text-md font-light mb-8 mt-2">Login to your account!</p>
 
@@ -87,15 +86,15 @@ const Login: React.FC = () => {
           Enter your email and we'll send a reset link.
         </p>
         <form onSubmit={handleForgotPassword} className="flex flex-col">
-          <p className="text-3xl">Email</p>
+          <p className="text-xl pb-4">Email</p>
           <Input
             id="resetEmail"
             type="email"
-            placeholder="you@example.com"
+            placeholder="You@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full p-2 border-[1.5px] rounded-xl"
+            className="w-full p-4 border-[1.5px] border-black rounded-full"
           />
           <div className="pt-6">
             <Button
@@ -110,7 +109,7 @@ const Login: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsResetMode(false)}
-            className=" hover:underline text-sm"
+            className=" hover:underline hover:cursor-pointer text-sm"
           >
             Back to Login
           </button>
@@ -123,7 +122,7 @@ const Login: React.FC = () => {
         </h2>
         <button
           onClick={handleSignInWithGoogle}
-          className="w-full justify-center items-center flex  bg-pearl font-semibold py-1 rounded-2xl border-[1.5px] mb-6  hover:shadow-lg transition"
+          className="w-full justify-center items-center flex  bg-pearl font-semibold py-1 rounded-2xl border-[1.5px] mb-6  hover:shadow-lg transition cursor-pointer"
         >
           <img src={Google} alt="Google" className="mr-2" />
           Sign in with Google
@@ -141,7 +140,7 @@ const Login: React.FC = () => {
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="You@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -153,7 +152,7 @@ const Login: React.FC = () => {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -162,7 +161,7 @@ const Login: React.FC = () => {
            <Button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3/5 transform -translate-y-3/4 text-sm font-semibold bg-transparent text-black p-0 m-0"
+            className="absolute right-3 top-3/5 transform -translate-y-3/4 text-sm font-semibold bg-transparent text-black p-0 m-0 cursor-pointer"
           >
             {showPassword ? "Hide" : "Show"}
           </Button>
@@ -172,12 +171,12 @@ const Login: React.FC = () => {
           <div className="flex justify-center pt-8 pb-2">
             <Button
               type="submit"
-              className="bg-lightgray/30 border-[1.5px] border-black hover:bg-darkgray/30 w-40 font-semibold py-3 rounded-full shadow-md text-black transition"
+              className="bg-lightgray/30 border-[1.5px] border-black hover:bg-darkgray/30 w-40 font-semibold py-3 rounded-full shadow-md text-black transition cursor-pointer"
             >
               Login
             </Button>
           </div>
-          <p className="text-sm text-center mt-2">
+          <p className="text-sm text-center mt-6">
             Don't have an account?{" "}
             <Link to="/register">
               <span className="font-extrabold underline">Register</span>

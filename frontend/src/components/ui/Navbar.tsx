@@ -33,7 +33,7 @@ const Navbar = () => {
 
   const AuthDropdown = () => (
     <div className="relative group">
-      <button className="nav-color">{name}</button>
+      <button className="nav-color tracking-wide">{name}</button>
       <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
         <button
           onClick={handleLogout}
@@ -61,7 +61,12 @@ const Navbar = () => {
           <Link to="/#about" className="nav-color font-bold tracking-wide nav-link">About</Link>
 
           {session ? (
-            <AuthDropdown />
+            <>
+              <Link to="/dashboard" className="nav-color font-bold tracking-wide nav-link">
+                Dashboard
+              </Link>
+              <AuthDropdown />
+            </>
           ) : (
             <>
               <Link to="/login" className="nav-color border-[1.5px] bg-offwhite hover:bg-darkgray/35 transition-all duration-300 border-black px-6 py-1 rounded-full font-bold tracking-wide ">Login</Link>
@@ -95,6 +100,9 @@ const Navbar = () => {
           <>
             <li className="text-md translate-y-20 text-3xl font-semibold">
               {name}
+            </li>
+            <li className="text-md translate-y-20">
+              <Link to="/dashboard" onClick={handleNav} className="text-4xl tracking-wide">Dashboard</Link>
             </li>
             <li className="text-md tracking-wide translate-y-20">
               <button onClick={handleLogout} className="text-4xl text-red-500">
