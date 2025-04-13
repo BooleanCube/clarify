@@ -654,20 +654,6 @@ const Note: React.FC = () => {
           </div>
         </>
       )}
-      {/* Note content display / editing area */}
-            <span className="text-gray-400">•</span>
-            <button
-              onClick={handleSavePreset}
-              className="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center space-x-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Save Preset</span>
-            </button>
-          </div>
-        </>
-      )}
 
       {/* Note Content Display / Editing Area */}
       {isEditing ? (
