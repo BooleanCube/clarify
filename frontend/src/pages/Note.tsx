@@ -22,6 +22,10 @@ const Note: React.FC = () => {
 
   const [note, setNote] = useState<NoteProps | null>(null);
 
+  // New state for editing the note title
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [editedName, setEditedName] = useState<string>("");
+
   // Formatting and styling state
   const [fontSize, setFontSize] = useState<number>(16);
   const [lineHeight, setLineHeight] = useState<number>(1.5);
@@ -44,7 +48,7 @@ const Note: React.FC = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<boolean>(false);
 
-  // Editing state for a single chunk (instead of whole note)
+  // Editing state for a single chunk (instead of the whole note)
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedChunk, setEditedChunk] = useState<string>("");
 
@@ -77,14 +81,15 @@ const Note: React.FC = () => {
         alert(error.message);
       } else if (data) {
         setNote(data);
+        // Initialize editedName with the fetched note name
+        setEditedName(data.name);
       }
     }
 
     fetchNoteContent();
   }, [location, navigate]);
 
-  // Split note content into chunks whenever note content or chunkSize changes.
-  // We do not include any state from editing mode so that the chunks always reflect the saved note.
+  // Split note content into chunks based on the saved note (editing mode does not affect chunk splitting)
   useEffect(() => {
     if (note) {
       const parts = note.content.match(/(\S+\s*)/g);
@@ -94,7 +99,6 @@ const Note: React.FC = () => {
           newChunks.push(parts.slice(i, i + chunkSize).join(""));
         }
         setChunks(newChunks);
-        // Ensure currentChunkIndex is valid
         if (currentChunkIndex >= newChunks.length) {
           setCurrentChunkIndex(0);
         }
@@ -107,6 +111,7 @@ const Note: React.FC = () => {
       setCurrentChunkIndex((idx) => idx - 1);
     }
   };
+
   const handleNextChunk = () => {
     if (currentChunkIndex < chunks.length - 1 && !isEditing) {
       setCurrentChunkIndex((idx) => idx + 1);
@@ -146,7 +151,7 @@ const Note: React.FC = () => {
     alert("Preset saved! (This is a stub function.)");
   };
 
-  // When the user clicks Edit, start editing the current chunk only.
+  // Chunk editing functions
   const handleEditChunk = () => {
     if (chunks[currentChunkIndex] !== undefined) {
       setIsEditing(true);
@@ -154,13 +159,10 @@ const Note: React.FC = () => {
     }
   };
 
-  // Save the edited chunk by merging it into the full note content and updating Supabase.
   const handleSaveChunk = async () => {
     if (!note) return;
-    // Replace the current chunk with the edited text.
     const updatedChunks = [...chunks];
     updatedChunks[currentChunkIndex] = editedChunk;
-    // Reassemble full note content.
     const newContent = updatedChunks.join("");
     const { error } = await supabase
       .from("notes")
@@ -171,19 +173,40 @@ const Note: React.FC = () => {
       alert("Failed to save note.");
       return;
     }
-    // Update the local note state with new content.
     setNote({ ...note, content: newContent });
     setChunks(updatedChunks);
     setIsEditing(false);
   };
 
-  // Cancel chunk editing
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedChunk("");
   };
 
-  // Define styling for the note/text preview area.
+  // Note title editing functions
+  const handleSaveName = async () => {
+    if (!note) return;
+    const { error } = await supabase
+      .from("notes")
+      .update({ name: editedName })
+      .eq("id", note.id);
+    if (error) {
+      console.error("Error updating note name:", error);
+      alert("Failed to save note name.");
+      return;
+    }
+    setNote({ ...note, name: editedName });
+    setIsEditingName(false);
+  };
+
+  const handleCancelNameEdit = () => {
+    if (note) {
+      setEditedName(note.name);
+    }
+    setIsEditingName(false);
+  };
+
+  // Define styling for the note/text preview area
   const textChunkStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
     lineHeight: lineHeight,
@@ -205,7 +228,43 @@ const Note: React.FC = () => {
     <div className="p-4">
       {note && (
         <>
-          <h2 className="mt-24 text-xl font-semibold text-center">{note.name}</h2>
+          {/* Note title area with edit functionality */}
+          <div className="mt-24 text-center">
+            {isEditingName ? (
+              <div className="flex flex-col items-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="text-xl font-semibold text-center border border-gray-300 rounded px-2 py-1"
+                />
+                <div className="space-x-2">
+                  <button
+                    onClick={handleSaveName}
+                    className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+                  >
+                    Save Title
+                  </button>
+                  <button
+                    onClick={handleCancelNameEdit}
+                    className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center items-center gap-4">
+                <h2 className="text-xl font-semibold">{note.name}</h2>
+                <button
+                  onClick={() => setIsEditingName(true)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                >
+                  Edit Title
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Chunk editing controls */}
           <div className="mt-2 text-center space-x-2">
@@ -236,7 +295,6 @@ const Note: React.FC = () => {
 
           {/* Toolbar with formatting controls */}
           <div className="mt-6 flex flex-wrap items-center gap-3 bg-gray-100 p-2 rounded justify-center">
-            {/* Font Family Dropdown */}
             <select
               value={fontFamily}
               onChange={(e) => setFontFamily(e.target.value)}
@@ -252,8 +310,6 @@ const Note: React.FC = () => {
               <option value="Lato, sans-serif">Lato</option>
               <option value="'Tiresias', sans-serif">Tiresias</option>
             </select>
-
-            {/* Font Size Controls */}
             <div className="flex items-center space-x-1">
               <input
                 type="number"
@@ -264,11 +320,7 @@ const Note: React.FC = () => {
                 onChange={(e) => setFontSize(Number(e.target.value))}
               />
             </div>
-
-            {/* Separator */}
             <span className="text-gray-400">•</span>
-
-            {/* Bold, Italic, Underline */}
             <button
               onClick={() => setIsBold(!isBold)}
               className={`text-sm border rounded px-2 py-1 ${isBold ? "bg-blue-100 font-bold" : ""}`}
@@ -290,11 +342,7 @@ const Note: React.FC = () => {
             >
               U
             </button>
-
-            {/* Separator */}
             <span className="text-gray-400">•</span>
-
-            {/* Text Color Picker */}
             <div className="flex items-center space-x-1" title="Text Color">
               <span className="text-sm font-semibold">A</span>
               <input
@@ -304,8 +352,6 @@ const Note: React.FC = () => {
                 className="border rounded p-1 w-6 h-6 cursor-pointer"
               />
             </div>
-
-            {/* Background Color Picker */}
             <div className="flex items-center space-x-1" title="Background Color">
               <i className="fas fa-fill-drip text-sm" />
               <input
@@ -315,11 +361,7 @@ const Note: React.FC = () => {
                 className="border rounded p-1 w-6 h-6 cursor-pointer"
               />
             </div>
-
-            {/* Separator */}
             <span className="text-gray-400">•</span>
-
-            {/* Line Height Controls */}
             <div className="flex items-center space-x-1" title="Line Height">
               <i className="fas fa-text-height text-sm" />
               <input
@@ -332,8 +374,6 @@ const Note: React.FC = () => {
                 onChange={(e) => setLineHeight(Number(e.target.value))}
               />
             </div>
-
-            {/* Letter Spacing Controls */}
             <div className="flex items-center space-x-1" title="Letter Spacing">
               <i className="fas fa-text-width text-sm" />
               <input
@@ -343,11 +383,7 @@ const Note: React.FC = () => {
                 onChange={(e) => setLetterSpacing(Number(e.target.value))}
               />
             </div>
-
-            {/* Separator */}
             <span className="text-gray-400">•</span>
-
-            {/* Alignment Controls */}
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => setAlignment("left")}
@@ -378,11 +414,7 @@ const Note: React.FC = () => {
                 <i className="fas fa-align-justify" />
               </button>
             </div>
-
-            {/* Separator */}
             <span className="text-gray-400">•</span>
-
-            {/* Chunk Size Controls */}
             <div className="flex items-center space-x-1" title="Chunk Size">
               <input
                 type="number"
@@ -394,11 +426,7 @@ const Note: React.FC = () => {
               />
               <span className="text-sm">words</span>
             </div>
-
-            {/* Separator */}
             <span className="text-gray-400">•</span>
-
-            {/* Save Preset button */}
             <button
               onClick={handleSavePreset}
               className="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center space-x-1"
@@ -429,13 +457,11 @@ const Note: React.FC = () => {
         </div>
       )}
 
-      {/* Pagination and audio generation controls */}
       {chunks.length > 0 && (
         <div className="mt-6">
           <div className="text-center mt-4 text-sm text-gray-600">
             Page {currentChunkIndex + 1} of {chunks.length}
           </div>
-
           <div className="flex justify-between mt-4">
             <button
               onClick={handlePrevChunk}
