@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import supabase from "@/supabase-client";
 import { useAuth } from "@/middleware";
 import { Link, useNavigate } from "react-router-dom";
-import { FiSidebar, FiHeart, FiHome } from "react-icons/fi";
+import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
 
 interface Tag {
   id: number;
@@ -212,6 +212,40 @@ const Dashboard: React.FC = () => {
     fetchTags();
   };
 
+  // Delete a tag from the global tag list
+  const handleDeleteTag = async (tagId: number) => {
+    if (!window.confirm("Are you sure you want to delete this tag?")) {
+      return;
+    }
+    const { error } = await supabase.from("tags").delete().eq("id", tagId);
+    if (error) {
+      console.error("Error deleting tag:", error);
+      alert("Failed to delete tag.");
+    } else {
+      fetchTags();
+      fetchNotes();
+      if (activeTag?.id === tagId) setActiveTag(null);
+    }
+  };
+
+  // New: Delete a tag from a note by removing its linking record
+  const handleDeleteNoteTag = async (noteId: number, tagId: number) => {
+    if (!window.confirm("Are you sure you want to remove this tag from the note?")) {
+      return;
+    }
+    const { error } = await supabase
+      .from("notes_tags")
+      .delete()
+      .eq("note_id", noteId)
+      .eq("tag_id", tagId);
+    if (error) {
+      console.error("Error deleting note tag:", error);
+      alert("Failed to remove tag from note.");
+    } else {
+      fetchNotes();
+    }
+  };
+
   const handleFavorite = async (noteId: number) => {
     const targetNote = notes.find((note) => note.id === noteId);
     if (!targetNote) return;
@@ -270,7 +304,7 @@ const Dashboard: React.FC = () => {
         <div className="flex px-4 py-4 hover:bg-white/30 cursor-pointer hover:border-black/50">
           <button
             onClick={() => setShowSidebar((prev) => !prev)}
-            className="cursor-pointer "
+            className="cursor-pointer"
           >
             <FiSidebar size={22} />
           </button>
@@ -332,11 +366,20 @@ const Dashboard: React.FC = () => {
                   onClick={() =>
                     setActiveTag(activeTag?.id === tag.id ? null : tag)
                   }
-                  className={`cursor-pointer inline-block bg-gray-200 text-blue-700 px-3 py-1 rounded ${
+                  className={`cursor-pointer inline-flex items-center bg-gray-200 text-blue-700 px-3 py-1 rounded ${
                     activeTag?.id === tag.id ? "bg-blue-700 text-white" : ""
                   }`}
                 >
                   {tag.name}
+                  {activeTag?.id === tag.id && (
+                    <FiTrash2
+                      className="ml-2 hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTag(tag.id);
+                      }}
+                    />
+                  )}
                 </span>
               ))}
             </div>
@@ -452,9 +495,16 @@ const Dashboard: React.FC = () => {
                       {note.tags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="inline-block bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
+                          className="inline-flex items-center bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
                         >
                           {tag.name}
+                          <FiTrash2
+                            className="ml-1 hover:text-red-500 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent note navigation
+                              handleDeleteNoteTag(note.id, tag.id);
+                            }}
+                          />
                         </span>
                       ))}
                     </div>
