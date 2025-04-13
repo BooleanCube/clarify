@@ -145,7 +145,7 @@ const Note: React.FC = () => {
       if (selectedPresetData?.id) {
         const { data, error } = await supabase
           .from("notes")
-          .update({ preset_id: selectedPresetData.id })
+          .update({ "preset_id": selectedPresetData.id })
           .eq("id", note?.id);
 
         if (error) {
@@ -170,30 +170,33 @@ const Note: React.FC = () => {
     if (selectedPresetData) await setPresetData(selectedPresetData);
   };
 
+  async function fetchPresets() {
+    if (!pid) return;
+    const { data, error } = await supabase.from("presets").select("*").eq("profile_id", pid);
+    if (error) {
+      console.error("Error fetching presets:", error);
+    } else if (data) {
+      setPresets(data);
+    }
+  }
+
+  // -- Lifecycle: Fetch presets --------------------------------------------------------
+  useEffect(() => {
+    fetchPresets();
+  }, [pid]);
+
   // Save a brand-new preset
   const handleSavePreset = async (current: Preset) => {
     const { data, error } = await supabase.from("presets").insert([current]);
     if (error) {
       console.log("Error inserting preset:", error);
-    } else if (data) {
-      setPresets((prev) => [...prev, data[0]]);
+    } else {
+      fetchPresets();
+      setSelectedPreset(current.name);
+      setPresetData(current);
     }
     return data;
   };
-
-  // -- Lifecycle: Fetch presets --------------------------------------------------------
-  useEffect(() => {
-    async function fetchPresets() {
-      if (!pid) return;
-      const { data, error } = await supabase.from("presets").select("*").eq("profile_id", pid);
-      if (error) {
-        console.error("Error fetching presets:", error);
-      } else if (data) {
-        setPresets(data);
-      }
-    }
-    fetchPresets();
-  }, [pid]);
 
   // -- Lifecycle: Fetch note data -----------------------------------------------------
   useEffect(() => {
@@ -346,7 +349,7 @@ const Note: React.FC = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             input: { text: text },
-            voice: { languageCode: "fil-PH", name: "fil-ph-Neural2-A" },
+            voice: { languageCode: "en-US", name: "en-US-Neural2-A" },
             audioConfig: { audioEncoding: "MP3" },
           }),
         }

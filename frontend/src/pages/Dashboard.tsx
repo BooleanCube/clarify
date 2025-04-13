@@ -4,7 +4,6 @@ import { useAuth } from "@/middleware";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar, { Note, Tag } from "@/components/ui/Sidebar"; // Adjust the import path as needed
 import { FiSidebar, FiHome, FiTrash2 } from "react-icons/fi";
-import { CgNotes } from "react-icons/cg";
 import { GrSearch } from "react-icons/gr";
 import UploadStep from "@/components/UploadStep";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai"; // New heart icons
