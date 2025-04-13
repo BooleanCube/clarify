@@ -5,6 +5,10 @@ import { useAuth } from "@/middleware";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+// import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
+// import { CgNotes } from "react-icons/cg";
+// import { GrSearch } from "react-icons/gr";
+
 interface Tag {
   id: number;
   name: string;
@@ -34,6 +38,8 @@ const Dashboard: React.FC = () => {
   // function to do names steps
   const [noteName, setNoteName] = useState<string>("");
   const [modalStep, setModalStep] = useState<"enterName" | "selectOption">("enterName");
+
+  
 
   const openModal = () => {
     console.log("open modal")
