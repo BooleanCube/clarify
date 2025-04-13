@@ -419,13 +419,9 @@ const Dashboard: React.FC = () => {
 
         {/* Scrollable Notes Area */}
         <main className="flex-1 p-12 overflow-auto">
-          <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
-            <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
-              + New Note
-            </button>
-            {isModalOpen && (
-              <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+        {isModalOpen && (
+              <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-100">
+                <div className="bg-gray-50 rounded-lg shadow-lg p-6 w-96">
                   {modalStep === "enterName" ? (
                     <>
                       <h2 className="text-lg font-bold mb-4">
@@ -493,6 +489,11 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
+          <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
+            <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
+              + New Note
+            </button>
+            
           </div>
           {/* Notes Title and List */}
           <div className="space-y-4">
