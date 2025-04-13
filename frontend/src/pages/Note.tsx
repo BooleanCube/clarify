@@ -62,7 +62,7 @@ const Note: React.FC = () => {
   const [letterSpacing, setLetterSpacing] = useState<number>(0);
   const [textColor, setTextColor] = useState<string>("#000000");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
-  const [fontFamily, setFontFamily] = useState<string>("Garamond");
+  const [fontFamily, setFontFamily] = useState<string>("Arial");
   const [isBold, setIsBold] = useState<boolean>(false);
   const [isItalic, setIsItalic] = useState<boolean>(false);
   const [isUnderline, setIsUnderline] = useState<boolean>(false);
@@ -579,8 +579,8 @@ const Note: React.FC = () => {
                 onChange={(e) => setFontFamily(e.target.value)}
                 className="text-sm border rounded px-2 py-1"
               >
-                <option value="OpenDyslexic">OpenDyslexic</option>
                 <option value="Arial, sans-serif">Arial</option>
+                <option value="OpenDyslexic">OpenDyslexic</option>
                 <option value="'Comic Sans MS', cursive">Comic Sans</option>
                 <option value="'Helvetica, Arial, sans-serif'">Helvetica</option>
                 <option value="'Courier New', monospace">Courier</option>
