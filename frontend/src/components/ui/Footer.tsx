@@ -26,7 +26,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-screen z-50 shadow border-t-[1.5px] border-black/20 bg-darkgray px-20 py-8">
+    <footer className="w-screen z-80 shadow border-t-[1.5px] border-black/20 bg-darkgray px-20 py-8">
       <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 px-6">
         <Link to="/#home" className="flex items-center space-x-2">
           <img

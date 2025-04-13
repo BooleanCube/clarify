@@ -3,6 +3,8 @@ import supabase from "@/supabase-client";
 import { useAuth } from "@/middleware";
 import { Link, useNavigate } from "react-router-dom";
 import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
+import { CgNotes } from "react-icons/cg";
+import { GrSearch } from "react-icons/gr";
 
 interface Tag {
   id: number;
@@ -228,7 +230,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // New: Delete a tag from a note by removing its linking record
+  // Delete a tag from a note by removing its linking record
   const handleDeleteNoteTag = async (noteId: number, tagId: number) => {
     if (!window.confirm("Are you sure you want to remove this tag from the note?")) {
       return;
@@ -293,81 +295,88 @@ const Dashboard: React.FC = () => {
   });
 
   return (
-    <div className="flex h-screen w-full bg-white/40">
+    <div className="flex w-full bg-white/40">
       <div
         className={`
-          fixed inset-y-0 left-0 pt-24 z-40 bg-lightgray border-[1.5px] shadow-md transition-all duration-300
+          fixed inset-y-0 left-0 pt-24 z-30 bg-darkgray/80 border-[1.5px] shadow-md transition-all duration-300
           ${showSidebar ? "w-64" : "w-20"}
         `}
       >
-        {/* Toggle Icon Always Visible */}
-        <div className="flex px-4 py-4 hover:bg-white/30 cursor-pointer hover:border-black/50">
-          <button
-            onClick={() => setShowSidebar((prev) => !prev)}
-            className="cursor-pointer"
-          >
+        <div
+          className={`flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200 hover:border-black/50 ${
+            showSidebar ? "px-4" : "justify-center"
+          }`}
+        >
+          <button onClick={() => setShowSidebar((prev) => !prev)} className="cursor-pointer">
             <FiSidebar size={22} />
           </button>
-          {showSidebar && <span className="pl-2">Menu</span>}
+          {showSidebar && <span className="pl-2 tracking-wide">Menu</span>}
         </div>
         <nav className="flex flex-col">
-          {/* Dashboard Button */}
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex items-center space-x-2 w-full px-4 py-4 hover:bg-white/30"
+            className={`w-full px-4 hover:cursor-pointer py-4 hover:bg-white/30 transition-all duration-200 ${
+              showSidebar ? "flex items-center space-x-2" : "flex justify-center"
+            }`}
           >
             <FiHome size={20} />
-            {showSidebar && <span>Dashboard</span>}
+            {showSidebar && <span className="tracking-wide">Dashboard</span>}
           </button>
-          {/* Favorites Button with Heart Icon */}
           <button
             onClick={() => setShowFavorites((prev) => !prev)}
-            className="flex items-center space-x-2 w-full px-4 py-4 hover:bg-white/30 hover:border-black/50"
+            className={`w-full px-4 py-4 hover:bg-white/30 transition-all duration-200 ${
+              showSidebar ? "flex items-center space-x-2" : "flex justify-center"
+            }`}
           >
             <FiHeart size={20} />
-            {showSidebar && <span>Favorites</span>}
+            {showSidebar && <span className="tracking-wide">Favorites</span>}
           </button>
-          {/* Render Notes List only when expanded */}
+          <span className="mb-5"></span>
           {showSidebar && (
-            <div className="mt-4 space-y-4">
-              {notes.map((note) => {
-                if (showFavorites && !note.favorite) return null;
-                return (
-                  <button
-                    key={note.id}
-                    className="w-full text-left px-4 py-2 rounded hover:bg-gray-200"
-                  >
-                    <Link to={`/note/${note.id}`}>{note.title}</Link>
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <hr className="my-2 border-t border-gray-400" />
+              <div className="mt-4 space-y-4">
+                <p className="font-extrabold text-2xl pl-4 tracking-wider">Notes</p>
+                {notes.map((note) => {
+                  if (showFavorites && !note.favorite) return null;
+                  return (
+                    <button
+                      key={note.id}
+                      className="w-full tracking-wide text-left hover:cursor-pointer px-4 py-4 rounded hover:bg-white/30"
+                    >
+                      <Link to={`/note/${note.id}`} className="flex items-center">
+                        <CgNotes className="mr-2" size={20} />
+                        <span>{note.title}</span>
+                      </Link>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </nav>
       </div>
 
-      {/* Main Content Area shifts right by sidebar width */}
       <div
         className={`
-          flex-1 flex flex-col transition-all duration-300 ${showSidebar ? "ml-64" : "ml-20"}
+          flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "ml-64" : "ml-20"}
         `}
       >
-        <header className="h-16 bg-white shadow-md flex items-center justify-between px-6">
-          <h1 className="text-xl font-bold">Dashboard</h1>
-        </header>
-        <main className="flex-1 p-6 overflow-auto">
-          <h1 className="text-2xl font-bold mb-4">Home</h1>
+        <main className="flex-1 p-6 m-12 pt-20 overflow-auto">
+          <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
           {/* Global Controls */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex space-x-2">
+            <div className="flex items-center space-x-2">
               {tags.map((tag: Tag) => (
                 <span
                   key={tag.id}
                   onClick={() =>
                     setActiveTag(activeTag?.id === tag.id ? null : tag)
                   }
-                  className={`cursor-pointer inline-flex items-center bg-gray-200 text-blue-700 px-3 py-1 rounded ${
-                    activeTag?.id === tag.id ? "bg-blue-700 text-white" : ""
+                  className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full ${
+                    activeTag?.id === tag.id
+                      ? "bg-black text-white"
+                      : "bg-white border-[1.5px] text-black"
                   }`}
                 >
                   {tag.name}
@@ -382,25 +391,26 @@ const Dashboard: React.FC = () => {
                   )}
                 </span>
               ))}
-            </div>
-            <div className="flex items-center space-x-2">
               <button
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+                className="bg-black text-white px-4 py-2 ml-2 rounded-lg hover:bg-gray-800"
                 onClick={handleAddTag}
               >
                 + New
               </button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <GrSearch size={24} />
               <input
                 type="text"
                 placeholder="Search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="border border-gray-300 px-3 py-2 rounded focus:outline-none"
+                className="border-2 border-black/20 px-3 py-2 rounded-full focus:outline-none"
               />
             </div>
           </div>
-          <div className="bg-white p-4 rounded shadow mb-4 flex items-center justify-center cursor-pointer hover:bg-gray-100">
-            <button className="text-2xl font-bold" onClick={openModal}>
+          <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
+            <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
               + New Note
             </button>
             {isModalOpen && (
@@ -474,6 +484,7 @@ const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+          {/* Notes Title and List */}
           <div className="space-y-4">
             {filteredNotes.map((note: Note) => {
               if (showFavorites && !note.favorite) return null;
@@ -481,7 +492,7 @@ const Dashboard: React.FC = () => {
                 <div key={note.id} className="relative">
                   <Link
                     to={`/note/${note.id}`}
-                    className="cursor-pointer p-4 block bg-white rounded shadow relative"
+                    className="cursor-pointer p-4 block bg-white/30 rounded-lg border-[1.5px] shadow mb-4 relative hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-semibold">{note.title}</div>
@@ -495,7 +506,7 @@ const Dashboard: React.FC = () => {
                       {note.tags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
+                          className="inline-flex items-center px-3 py-1 rounded-full bg-white border-[1.5px] text-black text-xs"
                         >
                           {tag.name}
                           <FiTrash2
