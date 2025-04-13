@@ -2,26 +2,9 @@ import React, { useState, useEffect } from "react";
 import supabase from "@/supabase-client";
 import { useAuth } from "@/middleware";
 import { Link, useNavigate } from "react-router-dom";
-import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
-import { CgNotes } from "react-icons/cg";
+import { FiTrash2 } from "react-icons/fi";
 import { GrSearch } from "react-icons/gr";
-
-// import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
-// import { CgNotes } from "react-icons/cg";
-// import { GrSearch } from "react-icons/gr";
-
-interface Tag {
-  id: number;
-  name: string;
-}
-
-interface Note {
-  id: number;
-  title: string;
-  content: string;
-  favorite: boolean;
-  tags: Tag[];
-}
+import Sidebar, { Note, Tag } from "@/components/ui/Sidebar"; // Adjust the import path as needed
 
 const Dashboard: React.FC = () => {
   const { session } = useAuth();
@@ -300,72 +283,20 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex w-full h-screen bg-white/40">
-      {/* Sidebar */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 pt-24 z-30 bg-darkgray border-[1.5px] shadow-md transition-all duration-300
-          ${showSidebar ? "w-full md:w-64" : "w-20"}
-        `}
-      >
-        <div
-          className={`flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200 ${
-            showSidebar ? "px-4" : "justify-center"
-          }`}
-        >
-          <button onClick={() => setShowSidebar((prev) => !prev)} className="cursor-pointer">
-            <FiSidebar size={22} />
-          </button>
-          {showSidebar && <span className="pl-2 tracking-wide">Menu</span>}
-        </div>
-        <nav className="flex flex-col">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className={`w-full px-4 hover:cursor-pointer py-4 hover:bg-white/30 transition-all duration-200 ${
-              showSidebar ? "flex items-center space-x-2" : "flex justify-center"
-            }`}
-          >
-            <FiHome size={20} />
-            {showSidebar && <span className="tracking-wide">Dashboard</span>}
-          </button>
-          <button
-            onClick={() => setShowFavorites((prev) => !prev)}
-            className={`w-full px-4 py-4 hover:bg-white/30 transition-all duration-200 ${
-              showSidebar ? "flex items-center space-x-2" : "flex justify-center"
-            }`}
-          >
-            <FiHeart size={20} />
-            {showSidebar && <span className="tracking-wide">Favorites</span>}
-          </button>
-          <span className="mb-5"></span>
-          {showSidebar && (
-            <>
-              <hr className="my-2 border-t border-gray-400" />
-              <div className="mt-4 space-y-4">
-                <p className="font-extrabold text-2xl pl-4 tracking-wider">Notes</p>
-                {notes.map((note) => {
-                  if (showFavorites && !note.favorite) return null;
-                  return (
-                    <button
-                      key={note.id}
-                      className="w-full tracking-wide text-left hover:cursor-pointer px-4 py-4 rounded hover:bg-white/30"
-                    >
-                      <Link to={`/note/${note.id}`} className="flex items-center">
-                        <CgNotes className="mr-2" size={20} />
-                        <span>{note.title}</span>
-                      </Link>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </nav>
-      </div>
+      {/* Sidebar Component */}
+      <Sidebar
+        showSidebar={showSidebar}
+        setShowSidebar={setShowSidebar}
+        notes={notes}
+        showFavorites={showFavorites}
+        setShowFavorites={setShowFavorites}
+      />
 
       {/* Main Content */}
       <div
         className={`
-          flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "md:ml-64" : "md:ml-20"}
+          flex-1 flex flex-col transition-all ease-in duration-400
+          ${showSidebar ? "md:ml-64" : "md:ml-20"}
         `}
       >
         {/* Sticky Header for Dashboard Title & Global Controls */}
@@ -419,81 +350,80 @@ const Dashboard: React.FC = () => {
 
         {/* Scrollable Notes Area */}
         <main className="flex-1 p-12 overflow-auto">
-        {isModalOpen && (
-              <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-100">
-                <div className="bg-gray-50 rounded-lg shadow-lg p-6 w-96">
-                  {modalStep === "enterName" ? (
-                    <>
-                      <h2 className="text-lg font-bold mb-4">
-                        Enter a Name for Your Note
-                      </h2>
-                      <input
-                        type="text"
-                        value={noteName}
-                        onChange={(e) => setNoteName(e.target.value)}
-                        placeholder="Note Name"
-                        className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none"
-                      />
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-100">
+              <div className="bg-gray-50 rounded-lg shadow-lg p-6 w-96">
+                {modalStep === "enterName" ? (
+                  <>
+                    <h2 className="text-lg font-bold mb-4">
+                      Enter a Name for Your Note
+                    </h2>
+                    <input
+                      type="text"
+                      value={noteName}
+                      onChange={(e) => setNoteName(e.target.value)}
+                      placeholder="Note Name"
+                      className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none"
+                    />
+                    <button
+                      className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                      onClick={() => {
+                        if (noteName.trim() === "") {
+                          alert("Please enter a name for your note.");
+                          return;
+                        }
+                        setModalStep("selectOption");
+                      }}
+                    >
+                      Next
+                    </button>
+                    <button
+                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg font-bold mb-4">Select an Option</h2>
+                    <div className="space-y-4">
                       <button
                         className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                        onClick={() => {
-                          if (noteName.trim() === "") {
-                            alert("Please enter a name for your note.");
-                            return;
-                          }
-                          setModalStep("selectOption");
-                        }}
+                        onClick={() => handleOptionSelect("Document")}
                       >
-                        Next
+                        Document
                       </button>
                       <button
-                        className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
-                        onClick={closeModal}
+                        className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                        onClick={() => handleOptionSelect("Image")}
                       >
-                        Cancel
+                        Image
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="text-lg font-bold mb-4">
-                        Select an Option
-                      </h2>
-                      <div className="space-y-4">
-                        <button
-                          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                          onClick={() => handleOptionSelect("Document")}
-                        >
-                          Document
-                        </button>
-                        <button
-                          className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                          onClick={() => handleOptionSelect("Image")}
-                        >
-                          Image
-                        </button>
-                        <button
-                          className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
-                          onClick={() => handleOptionSelect("Text")}
-                        >
-                          Text
-                        </button>
-                      </div>
                       <button
-                        className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
-                        onClick={closeModal}
+                        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                        onClick={() => handleOptionSelect("Text")}
                       >
-                        Cancel
+                        Text
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                    <button
+                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
               </div>
-            )}
-          <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
+            </div>
+          )}
+          <div
+            className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200"
+          >
             <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
               + New Note
             </button>
-            
           </div>
           {/* Notes Title and List */}
           <div className="space-y-4">
@@ -579,7 +509,7 @@ const Dashboard: React.FC = () => {
           </div>
         </main>
       </div>
-    </div>    
+    </div>
   );
 };
 
