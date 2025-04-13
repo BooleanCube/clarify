@@ -22,25 +22,25 @@ const Home: React.FC = () => {
   }, [location]);
   return (
     <>
-      <section className="flex flex-col-reverse lg:flex-row items-center justify-between px-6 mt-10 lg:px-20 py-14 shadow-xl bg-offwhite" id="home">
-        <div className="lg:w-1/2 text-center lg:text-left space-y-6">
-          <h1 className="text-3xl tracking-wide lg:text-5xl font-bold">
-            A dyslexia converter for your everyday basic needs
-          </h1>
-          <p className="text-xl tracking-wider ">
-            Easily customize your files, texts, and images into your own customized format.
-          </p>
-          <button className="px-6 py-2 bg-darkgray hover:bg-darkgray/80 hover:shadow-md/30 hover:-translate-y-0.5 rounded-full border-[1.5px] border-black text-black tracking-wider transition-all cursor-pointer">
-            Try Now
-          </button>
-        </div>
-        <div className="lg:w-1/2 m-10 lg:mt-0">
-          <img
-            src={hero}
-            alt="hero"
-            className="w-full h-auto transition-all duration-300 ease-in-out"
-          />
-        </div>
+      <section className="flex flex-col-reverse lg:flex-row items-center max-w-[1440px] mx-auto justify-between px-6 mt-10 lg:px-20 py-14 shadow-xl bg-offwhite" id="home">
+          <div className="lg:w-1/2 text-center lg:text-left space-y-6">
+            <h1 className="text-3xl tracking-wide lg:text-5xl font-bold">
+              A dyslexia converter for your everyday basic needs
+            </h1>
+            <p className="text-xl tracking-wider ">
+              Easily customize your files, texts, and images into your own customized format.
+            </p>
+            <button className="px-6 py-2 bg-darkgray hover:bg-darkgray/80 hover:shadow-md/30 hover:-translate-y-0.5 rounded-full border-[1.5px] border-black text-black tracking-wider transition-all cursor-pointer">
+              Try Now
+            </button>
+          </div>
+          <div className="lg:w-5/12 m-10 lg:mt-0">
+            <img
+              src={hero}
+              alt="hero"
+              className="w-full h-auto transition-all duration-300 ease-in-out"
+            />
+          </div>
       </section>
 
       <section className="flex flex-col-reverse lg:flex-row items-center justify-between px-6 lg:px-20 py-22" id="about">
@@ -49,7 +49,7 @@ const Home: React.FC = () => {
           Clarify simplifies everyday digital tasks
           </h1>
           <p className="text-xl  tracking-wider">
-          Whether you’re converting documents, text, or images, we make it seamless and fast so you can focus on what matters most.
+          Whether you're converting documents, text, or images, we make it seamless and fast so you can focus on what matters most.
           </p>
         </div>
         <div className="lg:w-1/4 w-1/3 m-10 py-12 lg:mt-0">
