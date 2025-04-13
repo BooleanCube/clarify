@@ -98,8 +98,7 @@ const Home: React.FC = () => {
         <h2 className="text-3xl tracking-wider lg:text-4xl font-bold text-center sparkle-text pl-4">How to use Clarify</h2>
         
         </div>
-        <iframe className="w-full h-96" src="https://www.youtube.com/embed/YSWMYnuOImg?si=FzVo7W5Z32MRkHwO" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
+        <iframe className="w-full h-96" src="https://www.youtube.com/embed/utsVPsdxm_s?si=R1Y9FBrkrmTctubb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </section>
     </>
   );
