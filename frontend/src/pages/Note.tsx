@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import Groq from "groq-sdk";
 import supabase from "@/supabase-client";
+import { useAuth } from "@/middleware";
 
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY,
@@ -14,24 +15,30 @@ interface NoteProps {
   name: string;
   content: string;
   favorite: boolean;
+  preset_id: number;
 }
 
 interface Preset {
+  id?: number,
   name: string;
-  fontSize: number;
-  lineHeight: number;
-  letterSpacing: number;
-  textColor: string;
-  backgroundColor: string;
-  fontFamily: string;
-  isBold: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
+  font_size: number;
+  line_height: number;
+  letter_spacing: number;
+  text_color: string;
+  background_color: string;
+  font_family: string;
+  font_bold: boolean;
+  font_italic: boolean;
+  font_underline: boolean;
   alignment: "left" | "center" | "right" | "justify";
-  chunkSize: number;
+  chunk_size: number;
+  profile_id: string | undefined;
 }
 
 const Note: React.FC = () => {
+  const { session } = useAuth();
+  const pid = session?.user.id;
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,81 +70,64 @@ const Note: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedChunk, setEditedChunk] = useState<string>("");
 
-  const [presets, setPresets] = useState<Preset[]>([
-    {
-      name: "Default",
-      fontSize: 16,
-      lineHeight: 1.5,
-      letterSpacing: 0,
-      textColor: "#000000",
-      backgroundColor: "#ffffff",
-      fontFamily: "Garamond",
-      isBold: false,
-      isItalic: false,
-      isUnderline: false,
-      alignment: "left",
-      chunkSize: 30,
-    },
-    {
-      name: "High Contrast",
-      fontSize: 18,
-      lineHeight: 1.6,
-      letterSpacing: 1,
-      textColor: "#ffffff",
-      backgroundColor: "#000000",
-      fontFamily: "Arial, sans-serif",
-      isBold: true,
-      isItalic: false,
-      isUnderline: false,
-      alignment: "justify",
-      chunkSize: 40,
-    },
-  ]); // Dummy preset data
+  const [presets, setPresets] = useState<Preset[]>([]);
 
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+
+  const setPresetData = async (selectedPresetData: Preset) => {
+    if (selectedPresetData) {
+      setFontSize(selectedPresetData.font_size);
+      setLineHeight(selectedPresetData.line_height);
+      setLetterSpacing(selectedPresetData.letter_spacing);
+      setTextColor(selectedPresetData.text_color);
+      setBackgroundColor(selectedPresetData.background_color);
+      setFontFamily(selectedPresetData.font_family);
+      setIsBold(selectedPresetData.font_bold);
+      setIsItalic(selectedPresetData.font_italic);
+      setIsUnderline(selectedPresetData.font_underline);
+      setAlignment(selectedPresetData.alignment);
+      setChunkSize(selectedPresetData.chunk_size);
+
+      if (selectedPresetData?.id) {
+        const { data, error } = await supabase
+          .from("notes")
+          .update({ preset_id: selectedPresetData.id })
+          .eq("id", note?.id);
+      
+        if (error) {
+          console.error("Error updating preset id:", error);
+        } else {
+          console.log("Preset id updated:", data);
+        }
+      }
+    }
+  }
+
+  const handlePresetChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const presetName = e.target.value;
     setSelectedPreset(presetName);
 
-    const selectedPresetData = presets.find((p) => p.name === presetName);
+    const selectedPresetData = presets.find((p: Preset) => p.name === presetName);
 
-    if (selectedPresetData) {
-      setFontSize(selectedPresetData.fontSize);
-      setLineHeight(selectedPresetData.lineHeight);
-      setLetterSpacing(selectedPresetData.letterSpacing);
-      setTextColor(selectedPresetData.textColor);
-      setBackgroundColor(selectedPresetData.backgroundColor);
-      setFontFamily(selectedPresetData.fontFamily);
-      setIsBold(selectedPresetData.isBold);
-      setIsItalic(selectedPresetData.isItalic);
-      setIsUnderline(selectedPresetData.isUnderline);
-      setAlignment(selectedPresetData.alignment);
-      setChunkSize(selectedPresetData.chunkSize);
-    }
+    if(selectedPresetData) await setPresetData(selectedPresetData)
   };
 
-  const handleSavedPreset = () => {
-    const presetName = window.prompt("Enter preset name:");
-    if (presetName) {
-      const newPreset: Preset = {
-        name: presetName,
-        fontSize: fontSize,
-        lineHeight: lineHeight,
-        letterSpacing: letterSpacing,
-        textColor: textColor,
-        backgroundColor: backgroundColor,
-        fontFamily: fontFamily,
-        isBold: isBold,
-        isItalic: isItalic,
-        isUnderline: isUnderline,
-        alignment: alignment,
-        chunkSize: chunkSize,
-      };
-
-      setPresets([...presets, newPreset]);
-      alert(`Preset "${presetName}" saved!`);
+  useEffect(() => {
+    async function fetchPresets() {
+      if (!pid) return;
+      const { data, error } = await supabase
+        .from("presets")
+        .select("*")
+        .eq("profile_id", pid);
+      if (error) {
+        console.error("Error fetching presets:", error);
+      } else if (data) {
+        setPresets(data);
+      }
     }
-  };
+    
+    fetchPresets();
+  }, [pid]);
 
   // Fetch note data from Supabase based on URL ID
   useEffect(() => {
@@ -168,11 +158,14 @@ const Note: React.FC = () => {
         alert(error.message);
       } else if (data) {
         setNote(data);
+
+        const selectedPresetData = presets.find((p: Preset) => p.id === data.preset_id);
+        if(selectedPresetData) setPresetData(selectedPresetData);
       }
     }
 
     fetchNoteContent();
-  }, [location, navigate]);
+  }, [location, navigate, presets, pid]);
 
   // Split note content into chunks whenever note content or chunkSize changes.
   // We do not include any state from editing mode so that the chunks always reflect the saved note.
@@ -232,10 +225,20 @@ const Note: React.FC = () => {
     }
   };
 
-  // Save Preset (stub function)
-  const handleSavePreset = () => {
-    alert("Preset saved! (This is a stub function.)");
+  const handleSavePreset = async (current: Preset) => {
+    const { data, error } = await supabase
+      .from("presets")
+      .insert([current]);
+  
+    if (error) {
+      console.log("Error inserting preset:", error);
+    } else if (data) {
+      // Append the newly inserted preset (data[0]) to the current presets.
+      setPresets((prev) => [...prev, data[0]]);
+    }
+    return data;
   };
+  
 
   // When the user clicks Edit, start editing the current chunk only.
   const handleEditChunk = () => {
@@ -485,7 +488,10 @@ const Note: React.FC = () => {
               />
               <span className="text-sm">words</span>
             </div>
+
             {/* Separator */}       
+            <span className="text-gray-400">•</span>
+
             <div className="relative">
                 <select
                     value={selectedPreset || ""}
@@ -493,7 +499,7 @@ const Note: React.FC = () => {
                     className="text-sm border rounded px-2 py-1"
                 >
                   <option value="" disabled>
-                      Load Preset
+                      Default
                   </option>
                     {presets.map((preset) => (
                         <option key={preset.name} value={preset.name}>
@@ -517,22 +523,22 @@ const Note: React.FC = () => {
                                     if (presetName) {
                                         const newPreset: Preset = {
                                             name: presetName,
-                                            fontSize: fontSize,
-                                            lineHeight: lineHeight,
-                                            letterSpacing: letterSpacing,
-                                            textColor: textColor,
-                                            backgroundColor: backgroundColor,
-                                            fontFamily: fontFamily,
-                                            isBold: isBold,
-                                            isItalic: isItalic,
-                                            isUnderline: isUnderline,
+                                            font_size: fontSize,
+                                            line_height: lineHeight,
+                                            letter_spacing: letterSpacing,
+                                            text_color: textColor,
+                                            background_color: backgroundColor,
+                                            font_family: fontFamily,
+                                            font_bold: isBold,
+                                            font_italic: isItalic,
+                                            font_underline: isUnderline,
                                             alignment: alignment,
-                                            chunkSize: chunkSize,
+                                            chunk_size: chunkSize,
+                                            profile_id: pid,
                                         };
 
-                                        setPresets([...presets, newPreset]);
+                                        handleSavePreset(newPreset)
                                         setSelectedPreset(null); // Reset dropdown
-                                        alert(`Preset "${presetName}" saved!`);
                                     } else {
                                         alert("Please enter a valid preset name.");
                                     }
