@@ -503,7 +503,7 @@ const Dashboard: React.FC = () => {
             </div>
           )}
           <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
-            <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
+            <button className="text-3xl tracking-wider py-6 font-semibold new-shadow" onClick={openModal}>
               + New Note
             </button>
           </div>

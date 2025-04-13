@@ -10,12 +10,17 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
+  letter-spacing:0.05em;
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  letter-spacing:0.05em;
+}
+
+button:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 
