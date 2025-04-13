@@ -5,9 +5,24 @@ import bulb from "../assets/lightbulb.png";
 import sparkle from "../assets/titlesparkle.svg";
 import FeatureCarousel from "../components/ui/FeatureCarousel"
 
+import { useNavigate  } from "react-router-dom";
+import { useAuth } from "@/middleware";
+
 
 const Home: React.FC = () => {
   const location = useLocation();
+
+  const navigate = useNavigate();
+  const { session } = useAuth();
+
+  const handleTryNowClick = () => {
+    console.log("Session:", session);
+    if (session) {
+      navigate("/dashboard");
+    } else {
+      navigate("/register");
+    }
+  }
 
   useEffect(() => {
     const hash = location.hash;
@@ -30,7 +45,8 @@ const Home: React.FC = () => {
             <p className="text-xl tracking-wider ">
               Easily customize your files, texts, and images into your own customized format.
             </p>
-            <button className="px-6 py-2 bg-darkgray hover:bg-darkgray/80 hover:shadow-md/30 hover:-translate-y-0.5 rounded-full border-[1.5px] border-black text-black tracking-wider transition-all cursor-pointer">
+            <button className="px-6 py-2 bg-darkgray hover:bg-darkgray/80 hover:shadow-md/30 hover:-translate-y-0.5 rounded-full border-[1.5px] border-black text-black tracking-wider transition-all cursor-pointer"
+             onClick={handleTryNowClick}>
               Try Now
             </button>
           </div>

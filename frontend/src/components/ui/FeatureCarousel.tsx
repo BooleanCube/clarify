@@ -90,7 +90,7 @@ export default function FeatureCarousel() {
               <Card className="h-full p-6 rounded-xl shadow-md bg-offwhite flex flex-col items-center justify-center text-center">
                 <div>{feature.icon}</div>
                 <h3 className="text-2xl font-bold tracking-wide">{feature.title}</h3>
-                <p className="text-lg text-muted-foreground tracking-wide">{feature.description}</p>
+                <p className="text-lg text-muted-foreground tracking-wider">{feature.description}</p>
               </Card>
             </CarouselItem>
           ))}

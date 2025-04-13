@@ -11,8 +11,6 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true,
 });
 
-
-
 interface NoteProps {
   id: number;
   name: string;
@@ -22,7 +20,7 @@ interface NoteProps {
 }
 
 interface Preset {
-  id?: number,
+  id?: number;
   name: string;
   font_size: number;
   line_height: number;
@@ -58,35 +56,31 @@ const Note: React.FC = () => {
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [editedName, setEditedName] = useState<string>("");
 
-  // Formatting and styling state
+  // Formatting and styling states
   const [fontSize, setFontSize] = useState<number>(16);
   const [lineHeight, setLineHeight] = useState<number>(1.5);
   const [letterSpacing, setLetterSpacing] = useState<number>(0);
   const [textColor, setTextColor] = useState<string>("#000000");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
-  // IMPORTANT: For OpenDyslexic to work correctly, set the family to exactly "OpenDyslexic"
   const [fontFamily, setFontFamily] = useState<string>("Garamond");
-
   const [isBold, setIsBold] = useState<boolean>(false);
   const [isItalic, setIsItalic] = useState<boolean>(false);
   const [isUnderline, setIsUnderline] = useState<boolean>(false);
-
   const [alignment, setAlignment] = useState<"left" | "center" | "right" | "justify">("left");
 
   // Chunking and audio generation states
   const [chunkSize, setChunkSize] = useState<number>(30);
   const [chunks, setChunks] = useState<string[]>([]);
   const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0);
-
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<boolean>(false);
 
-  // Editing state for a single chunk (instead of the whole note)
+  // Editing state for chunks
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedChunk, setEditedChunk] = useState<string>("");
 
+  // Presets
   const [presets, setPresets] = useState<Preset[]>([]);
-
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   // --------------------------
@@ -133,6 +127,7 @@ const Note: React.FC = () => {
     }
   }, [pid]);
 
+
   const setPresetData = async (selectedPresetData: Preset) => {
     if (selectedPresetData) {
       setFontSize(selectedPresetData.font_size);
@@ -152,7 +147,7 @@ const Note: React.FC = () => {
           .from("notes")
           .update({ preset_id: selectedPresetData.id })
           .eq("id", note?.id);
-      
+
         if (error) {
           console.error("Error updating preset id:", error);
         } else {
@@ -160,36 +155,77 @@ const Note: React.FC = () => {
         }
       }
     }
-  }
+  };
 
   const handlePresetChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const presetName = e.target.value;
     setSelectedPreset(presetName);
 
-    const selectedPresetData = presets.find((p: Preset) => p.name === presetName);
+    if (presetName === "save-current") {
+      // Do nothing for now, just let the preset name selection fall through
+      return;
+    }
 
-    if(selectedPresetData) await setPresetData(selectedPresetData)
+    const selectedPresetData = presets.find((p: Preset) => p.name === presetName);
+    if (selectedPresetData) await setPresetData(selectedPresetData);
   };
 
+  // Save a brand-new preset
+  const handleSavePreset = async (current: Preset) => {
+    const { data, error } = await supabase.from("presets").insert([current]);
+    if (error) {
+      console.log("Error inserting preset:", error);
+    } else if (data) {
+      setPresets((prev) => [...prev, data[0]]);
+    }
+    return data;
+  };
+
+  // -- Lifecycle: Fetch presets --------------------------------------------------------
   useEffect(() => {
     async function fetchPresets() {
       if (!pid) return;
-      const { data, error } = await supabase
-        .from("presets")
-        .select("*")
-        .eq("profile_id", pid);
+      const { data, error } = await supabase.from("presets").select("*").eq("profile_id", pid);
       if (error) {
         console.error("Error fetching presets:", error);
       } else if (data) {
         setPresets(data);
       }
     }
-    
     fetchPresets();
   }, [pid]);
 
-  // Fetch note data from Supabase based on URL ID
-  // Inject external font links for Google Fonts (for Atkinson Hyperlegible and Open Sans)
+  // -- Lifecycle: Fetch note data -----------------------------------------------------
+  useEffect(() => {
+    async function fetchNoteContent() {
+      let path = location.pathname;
+      if (path.at(path.length - 1) === "/") path = path.slice(0, -1);
+      const idStr = path.substring(path.lastIndexOf("/") + 1);
+      if (idStr.trim() === "") {
+        navigate("/dashboard");
+        return;
+      }
+      const id = Number(idStr.trimEnd());
+      if (!Number.isInteger(id) || isNaN(id)) {
+        navigate("/dashboard");
+        return;
+      }
+      const { data, error } = await supabase.from("notes").select("*").eq("id", id).single();
+      if (error) {
+        console.error("Error fetching note content:", error);
+        alert(error.message);
+      } else if (data) {
+        setNote(data);
+        setEditedName(data.name);
+
+        const selectedPresetData = presets.find((p: Preset) => p.id === data.preset_id);
+        if (selectedPresetData) setPresetData(selectedPresetData);
+      }
+    }
+    fetchNoteContent();
+  }, [location, navigate, presets, pid]);
+
+  // -- Lifecycle: Load Google/OpenDyslexic fonts ---------------------------------------
   useEffect(() => {
     const linkPreconnect1 = document.createElement("link");
     linkPreconnect1.rel = "preconnect";
@@ -215,8 +251,7 @@ const Note: React.FC = () => {
     };
   }, []);
 
-  // Inject multiple @font-face rules for OpenDyslexic, including Regular, Bold, Italic, and Bold Italic variants.
-  // Make sure these files exist at the specified paths in your public folder.
+  // Inject multiple @font-face rules for OpenDyslexic
   useEffect(() => {
     const styleEl = document.createElement("style");
     styleEl.innerHTML = `
@@ -224,7 +259,7 @@ const Note: React.FC = () => {
       @font-face {
         font-family: 'OpenDyslexic';
         src: url('/fonts/OpenDyslexic-Regular.woff2') format('woff2'),
-             url('/fonts/OpenDyslexic-Regular.woff') format('woff');
+            url('/fonts/OpenDyslexic-Regular.woff') format('woff');
         font-weight: 400;
         font-style: normal;
         font-display: swap;
@@ -233,7 +268,7 @@ const Note: React.FC = () => {
       @font-face {
         font-family: 'OpenDyslexic';
         src: url('/fonts/OpenDyslexic-Bold.woff2') format('woff2'),
-             url('/fonts/OpenDyslexic-Bold.woff') format('woff');
+            url('/fonts/OpenDyslexic-Bold.woff') format('woff');
         font-weight: 700;
         font-style: normal;
         font-display: swap;
@@ -242,7 +277,7 @@ const Note: React.FC = () => {
       @font-face {
         font-family: 'OpenDyslexic';
         src: url('/fonts/OpenDyslexic-Italic.woff2') format('woff2'),
-             url('/fonts/OpenDyslexic-Italic.woff') format('woff');
+            url('/fonts/OpenDyslexic-Italic.woff') format('woff');
         font-weight: 400;
         font-style: italic;
         font-display: swap;
@@ -251,7 +286,7 @@ const Note: React.FC = () => {
       @font-face {
         font-family: 'OpenDyslexic';
         src: url('/fonts/OpenDyslexic-BoldItalic.woff2') format('woff2'),
-             url('/fonts/OpenDyslexic-BoldItalic.woff') format('woff');
+            url('/fonts/OpenDyslexic-BoldItalic.woff') format('woff');
         font-weight: 700;
         font-style: italic;
         font-display: swap;
@@ -263,41 +298,7 @@ const Note: React.FC = () => {
     };
   }, []);
 
-  // Fetch note data from Supabase based on URL ID.\
-  useEffect(() => {
-    async function fetchNoteContent() {
-      let path = location.pathname;
-      if (path.at(path.length - 1) === "/") path = path.slice(0, -1);
-      const idStr = path.substring(path.lastIndexOf("/") + 1);
-      if (idStr.trim() === "") {
-        navigate("/dashboard");
-        return;
-      }
-      const id = Number(idStr.trimEnd());
-      if (!Number.isInteger(id) || isNaN(id)) {
-        navigate("/dashboard");
-        return;
-      }
-      const { data, error } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) {
-        console.error("Error fetching note content:", error);
-        alert(error.message);
-      } else if (data) {
-        setNote(data);
-
-        const selectedPresetData = presets.find((p: Preset) => p.id === data.preset_id);
-        if(selectedPresetData) setPresetData(selectedPresetData);
-        // Initialize editedName with the fetched note name
-        setEditedName(data.name);
-      }
-    }
-    fetchNoteContent();
-  }, [location, navigate, presets, pid]);
-
+  // -- Lifecycle: Re-chunk whenever note or chunk settings change ----------------------
   useEffect(() => {
     if (note) {
       const parts = note.content.match(/(\S+\s*)/g);
@@ -314,6 +315,7 @@ const Note: React.FC = () => {
     }
   }, [note, chunkSize, currentChunkIndex]);
 
+  // -- Chunk navigation ----------------------------------------------------------------
   const handlePrevChunk = () => {
     if (currentChunkIndex > 0 && !isEditing) {
       setCurrentChunkIndex((idx) => idx - 1);
@@ -326,16 +328,17 @@ const Note: React.FC = () => {
     }
   };
 
+  // -- Generate audio ------------------------------------------------------------------
   const generateAudio = async (text: string) => {
     setLoadingAudio(true);
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_CLOUD_TTS_API_KEY; //
+      const apiKey = import.meta.env.VITE_GOOGLE_CLOUD_TTS_API_KEY;
       if (!apiKey) {
         console.error("Google Cloud TTS API key not found in environment variables.");
         setLoadingAudio(false);
         return;
       }
-  
+
       const response = await fetch(
         `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
         {
@@ -343,22 +346,20 @@ const Note: React.FC = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             input: { text: text },
-            voice: { languageCode: "fil-PH", name: "fil-ph-Neural2-A" }, // 
+            voice: { languageCode: "fil-PH", name: "fil-ph-Neural2-A" },
             audioConfig: { audioEncoding: "MP3" },
           }),
         }
       );
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error from Google Cloud TTS API:", errorData);
         setLoadingAudio(false);
         return;
       }
-  
+
       const data = await response.json();
-      console.log("Google Cloud TTS response:", data);
-  
       if (data.audioContent) {
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioContent), (c) => c.charCodeAt(0))],
@@ -384,22 +385,7 @@ const Note: React.FC = () => {
     }
   };
 
-  const handleSavePreset = async (current: Preset) => {
-    const { data, error } = await supabase
-      .from("presets")
-      .insert([current]);
-  
-    if (error) {
-      console.log("Error inserting preset:", error);
-    } else if (data) {
-      // Append the newly inserted preset (data[0]) to the current presets.
-      setPresets((prev) => [...prev, data[0]]);
-    }
-    return data;
-  };
-  
-
-  // Chunk editing functions
+  // -- Editing chunks ------------------------------------------------------------------
   const handleEditChunk = () => {
     if (chunks[currentChunkIndex] !== undefined) {
       setIsEditing(true);
@@ -412,10 +398,7 @@ const Note: React.FC = () => {
     const updatedChunks = [...chunks];
     updatedChunks[currentChunkIndex] = editedChunk;
     const newContent = updatedChunks.join("");
-    const { error } = await supabase
-      .from("notes")
-      .update({ content: newContent })
-      .eq("id", note.id);
+    const { error } = await supabase.from("notes").update({ content: newContent }).eq("id", note.id);
     if (error) {
       console.error("Error updating note content:", error);
       alert("Failed to save note.");
@@ -431,7 +414,7 @@ const Note: React.FC = () => {
     setEditedChunk("");
   };
 
-  // Note title editing functions
+  // -- Editing the note title ----------------------------------------------------------
   const handleSaveName = async () => {
     if (!note) return;
     const { error } = await supabase
@@ -454,22 +437,25 @@ const Note: React.FC = () => {
     setIsEditingName(false);
   };
 
-  // Define styling for the note/text preview area
+  // -- Editor styling ------------------------------------------------------------------
   const textChunkStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
     lineHeight: lineHeight,
     letterSpacing: `${letterSpacing}px`,
     color: textColor,
     backgroundColor: backgroundColor,
-    fontFamily, // Make sure this value is exactly "OpenDyslexic" when you want to use that font.
+    fontFamily,
     textAlign: alignment,
-    width: "100%",
-    height: "300px",
-    overflow: "auto",
-    wordWrap: "break-word",
     fontWeight: isBold ? 700 : 400,
     fontStyle: isItalic ? "italic" : "normal",
     textDecoration: isUnderline ? "underline" : "none",
+    // Some sizing so it looks more like a text editor block
+    width: "100%",
+    minHeight: "250px",
+    overflow: "auto",
+    wordWrap: "break-word",
+    padding: "1rem",
+    borderRadius: "4px",
   };
 
   return (
@@ -485,339 +471,370 @@ const Note: React.FC = () => {
 
       {/* Main Content */}
       <div className={`flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "md:ml-64" : "md:ml-20"}`}>
-        <div className="p-4">
-          {note && (
-            <>
-              <h2 className="mt-24 text-xl font-semibold text-center">{note.name}</h2>
-              {/* Note title area with edit functionality */}
-              <div className="mt-24 text-center">
+        <div className="max-w-5xl mx-auto mt-30 mb-12">
+          <div className="note-container bg-offwhite border rounded-xl shadow-sm p-8">
+            <div className="note-header flex items-center justify-between border-b border-gray-300 pb-3 mb-4">
+              <div className="flex items-center gap-4">
                 {isEditingName ? (
-                  <div className="flex flex-col items-center gap-2">
+                  <>
                     <input
                       type="text"
                       value={editedName}
                       onChange={(e) => setEditedName(e.target.value)}
-                      className="text-xl font-semibold text-center border border-gray-300 rounded px-2 py-1"
+                      className="text-lg font-semibold border border-gray-300 rounded px-2 py-1"
                     />
-                    <div className="space-x-2">
-                      <button
-                        onClick={handleSaveName}
-                        className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
-                      >
-                        Save Title
-                      </button>
-                      <button
-                        onClick={handleCancelNameEdit}
-                        className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex justify-center items-center gap-4">
-                    <h2 className="text-xl font-semibold">{note.name}</h2>
                     <button
-                      onClick={() => setIsEditingName(true)}
-                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                      onClick={handleSaveName}
+                      className="bg-green-900 text-white px-3 py-1 rounded-full hover:bg-green-700 cursor-pointer "
                     >
-                      Edit Title
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Chunk editing controls */}
-              <div className="mt-2 text-center space-x-2">
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={handleSaveChunk}
-                      className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
-                    >
-                      Save Chunk
+                      Save Title
                     </button>
                     <button
-                      onClick={handleCancelEdit}
-                      className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
+                      onClick={handleCancelNameEdit}
+                      className="bg-none text-black border-2 px-3 py-0.5 -translate-x-1.5 rounded-full hover:bg-gray-300 cursor-pointer"
                     >
                       Cancel
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={handleEditChunk}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-                  >
-                    Edit Chunk
-                  </button>
+                  <>
+                    <h2 className="text-2xl font-semibold">{note?.name || "Untitled Note"}</h2>
+                    <button
+                      onClick={() => setIsEditingName(true)}
+                      className="bg-emerald-900 text-white px-3 py-1 rounded-full hover:bg-emerald-700 cursor-pointer"
+                    >
+                      Edit Title
+                    </button>
+                  </>
                 )}
               </div>
 
-              {/* Toolbar with formatting controls */}
-              <div className="mt-6 flex flex-wrap items-center gap-3 bg-gray-100 p-2 rounded justify-center">
+              {/* “Save Preset” handling – or you can rename to just “Save” if you like */}
+              <div className="relative">
                 <select
-                  value={fontFamily}
-                  onChange={(e) => setFontFamily(e.target.value)}
-                  className="text-sm border rounded px-2 py-1"
+                  value={selectedPreset || ""}
+                  onChange={handlePresetChange}
+                  className="text-sm border rounded px-2 py-1 mr-2"
                 >
-                  {/* IMPORTANT: OpenDyslexic option now sets value exactly to "OpenDyslexic" */}
-                  <option value="OpenDyslexic">OpenDyslexic</option>
-                  <option value="Arial, sans-serif">Arial</option>
-                  <option value="'Comic Sans MS', cursive">Comic Sans</option>
-                  <option value="'Helvetica, Arial, sans-serif'">Helvetica</option>
-                  <option value="'Courier New', monospace">Courier</option>
-                  <option value="Verdana, sans-serif">Verdana</option>
-                  <option value="'Calibri', sans-serif">Calibri</option>
-                  <option value="'Atkinson Hyperlegible', sans-serif">Atkinson Hyperlegible</option>
-                  <option value="'Century Gothic', sans-serif">Century Gothic</option>
-                  <option value="'Open Sans', sans-serif">Open Sans</option>
+                  <option value="" disabled>
+                    Load a Preset
+                  </option>
+                  {presets.map((preset) => (
+                    <option key={preset.name} value={preset.name}>
+                      {preset.name}
+                    </option>
+                  ))}
+                  <option value="save-current">Save Current as Preset</option>
                 </select>
-                <div className="flex items-center space-x-1">
-                  <input
-                    type="number"
-                    className="w-14 text-sm border rounded px-1 py-0.5 text-center"
-                    min={8}
-                    max={72}
-                    value={fontSize}
-                    onChange={(e) => setFontSize(Number(e.target.value))}
-                  />
-                </div>
-                <span className="text-gray-400">•</span>
-                <button
-                  onClick={() => setIsBold(!isBold)}
-                  className={`text-sm border rounded px-2 py-1 ${isBold ? "bg-blue-100 font-bold" : ""}`}
-                  title="Bold"
-                >
-                  B
-                </button>
-                <button
-                  onClick={() => setIsItalic(!isItalic)}
-                  className={`text-sm border rounded px-2 py-1 ${isItalic ? "bg-blue-100 italic" : ""}`}
-                  title="Italic"
-                >
-                  I
-                </button>
-                <button
-                  onClick={() => setIsUnderline(!isUnderline)}
-                  className={`text-sm border rounded px-2 py-1 ${isUnderline ? "bg-blue-100 underline" : ""}`}
-                  title="Underline"
-                >
-                  U
-                </button>
-                <span className="text-gray-400">•</span>
-                <div className="flex items-center space-x-1" title="Text Color">
-                  <span className="text-sm font-semibold">A</span>
-                  <input
-                    type="color"
-                    value={textColor}
-                    onChange={(e) => setTextColor(e.target.value)}
-                    className="border rounded p-1 w-6 h-6 cursor-pointer"
-                  />
-                </div>
-                <div className="flex items-center space-x-1" title="Background Color">
-                  <i className="fas fa-fill-drip text-sm" />
-                  <input
-                    type="color"
-                    value={backgroundColor}
-                    onChange={(e) => setBackgroundColor(e.target.value)}
-                    className="border rounded p-1 w-6 h-6 cursor-pointer"
-                  />
-                </div>
-                <span className="text-gray-400">•</span>
-                <div className="flex items-center space-x-1" title="Line Height">
-                  <i className="fas fa-text-height text-sm" />
-                  <input
-                    type="number"
-                    className="w-14 text-sm border rounded px-1 py-0.5 text-center"
-                    min={1}
-                    max={3}
-                    step={0.1}
-                    value={lineHeight}
-                    onChange={(e) => setLineHeight(Number(e.target.value))}
-                  />
-                </div>
-                <div className="flex items-center space-x-1" title="Letter Spacing">
-                  <i className="fas fa-text-width text-sm" />
-                  <input
-                    type="number"
-                    className="w-14 text-sm border rounded px-1 py-0.5 text-center"
-                    value={letterSpacing}
-                    onChange={(e) => setLetterSpacing(Number(e.target.value))}
-                  />
-                </div>
-                <span className="text-gray-400">•</span>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => setAlignment("left")}
-                    className={`text-sm border rounded px-2 py-1 ${alignment === "left" ? "bg-blue-100" : ""}`}
-                    title="Align Left"
-                  >
-                    <i className="fas fa-align-left" />
-                  </button>
-                  <button
-                    onClick={() => setAlignment("center")}
-                    className={`text-sm border rounded px-2 py-1 ${alignment === "center" ? "bg-blue-100" : ""}`}
-                    title="Align Center"
-                  >
-                    <i className="fas fa-align-center" />
-                  </button>
-                  <button
-                    onClick={() => setAlignment("right")}
-                    className={`text-sm border rounded px-2 py-1 ${alignment === "right" ? "bg-blue-100" : ""}`}
-                    title="Align Right"
-                  >
-                    <i className="fas fa-align-right" />
-                  </button>
-                  <button
-                    onClick={() => setAlignment("justify")}
-                    className={`text-sm border rounded px-2 py-1 ${alignment === "justify" ? "bg-blue-100" : ""}`}
-                    title="Justify"
-                  >
-                    <i className="fas fa-align-justify" />
-                  </button>
-                </div>
-                <span className="text-gray-400">•</span>
-                <div className="flex items-center space-x-1" title="Chunk Size">
-                  <input
-                    type="number"
-                    className="w-14 text-sm border rounded px-1 py-0.5 text-center"
-                    min={1}
-                    max={999}
-                    value={chunkSize}
-                    onChange={(e) => setChunkSize(Number(e.target.value))}
-                  />
-                  <span className="text-sm">words</span>
-                </div>
 
-                {/* Separator */}       
-                <span className="text-gray-400">•</span>
-
-                <div className="relative">
-                    <select
-                        value={selectedPreset || ""}
-                        onChange={handlePresetChange}
-                        className="text-sm border rounded px-2 py-1"
-                    >
-                      <option value="" disabled>
-                          Default
-                      </option>
-                        {presets.map((preset) => (
-                            <option key={preset.name} value={preset.name}>
-                                {preset.name}
-                            </option>
-                        ))}
-                      <option value="save-current">Save Current Settings as Preset</option>
-                    </select>
-
-                    {/* Save Current Preset Logic */}
-                    {selectedPreset === "save-current" && (
-                        <div className="absolute top-full mt-2 bg-white border rounded shadow-md p-4 z-10">
-                            <p className="text-sm mb-2">Enter a name for your preset:</p>
-                            <input
-                                type="text"
-                                className="border rounded px-2 py-1 w-full text-sm"
-                                placeholder="Preset Name"
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        const presetName = (e.target as HTMLInputElement).value.trim();
-                                        if (presetName) {
-                                            const newPreset: Preset = {
-                                                name: presetName,
-                                                font_size: fontSize,
-                                                line_height: lineHeight,
-                                                letter_spacing: letterSpacing,
-                                                text_color: textColor,
-                                                background_color: backgroundColor,
-                                                font_family: fontFamily,
-                                                font_bold: isBold,
-                                                font_italic: isItalic,
-                                                font_underline: isUnderline,
-                                                alignment: alignment,
-                                                chunk_size: chunkSize,
-                                                profile_id: pid,
-                                            };
-
-                                            handleSavePreset(newPreset)
-                                            setSelectedPreset(null); // Reset dropdown
-                                        } else {
-                                            alert("Please enter a valid preset name.");
-                                        }
-                                    }
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Note Content Display / Editing Area */}
-          {isEditing ? (
-            <textarea
-              value={editedChunk}
-              onChange={(e) => setEditedChunk(e.target.value)}
-              style={textChunkStyle}
-              className="w-full h-64 p-4 border border-gray-300 rounded-lg mt-6"
-            />
-          ) : (
-            <div
-              className="text-gray-700 whitespace-pre-wrap text-start border border-gray-300 p-4 rounded-lg mt-6"
-              style={textChunkStyle}
-            >
-              {chunks[currentChunkIndex]}
-            </div>
-          )}
-
-          {chunks.length > 0 && (
-            <div className="mt-6">
-              <div className="text-center mt-4 text-sm text-gray-600">
-                Page {currentChunkIndex + 1} of {chunks.length}
-              </div>
-              <div className="flex justify-between mt-4">
-                <button
-                  onClick={handlePrevChunk}
-                  disabled={isEditing || currentChunkIndex === 0}
-                  className={`py-2 px-4 rounded-lg ${
-                    currentChunkIndex === 0 || isEditing
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={handleNextChunk}
-                  disabled={isEditing || currentChunkIndex === chunks.length - 1}
-                  className={`py-2 px-4 rounded-lg ${
-                    currentChunkIndex === chunks.length - 1 || isEditing
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-              <div className="mt-4">
-                <button
-                  onClick={handleGenerateAudio}
-                  disabled={loadingAudio}
-                  className="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                >
-                  {loadingAudio ? "Generating Audio..." : "Generate Audio"}
-                </button>
-                {audioUrl && (
-                  <div className="mt-4">
-                    <audio controls src={audioUrl} className="w-full">
-                      Your browser does not support the audio element.
-                    </audio>
+                {/* If user chooses to save the current settings as a new preset */}
+                {selectedPreset === "save-current" && (
+                  <div className="absolute top-full mt-2 right-0 bg-white border border-gray-300 rounded shadow-md p-4 z-10 w-52">
+                    <p className="text-sm mb-2">Enter a name for your preset:</p>
+                    <input
+                      type="text"
+                      className="border-2 rounded px-2 py-1 w-full text-sm"
+                      placeholder="Preset Name"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const presetName = (e.target as HTMLInputElement).value.trim();
+                          if (presetName) {
+                            const newPreset: Preset = {
+                              name: presetName,
+                              font_size: fontSize,
+                              line_height: lineHeight,
+                              letter_spacing: letterSpacing,
+                              text_color: textColor,
+                              background_color: backgroundColor,
+                              font_family: fontFamily,
+                              font_bold: isBold,
+                              font_italic: isItalic,
+                              font_underline: isUnderline,
+                              alignment: alignment,
+                              chunk_size: chunkSize,
+                              profile_id: pid,
+                            };
+                            handleSavePreset(newPreset);
+                            setSelectedPreset(null);
+                          } else {
+                            alert("Please enter a valid preset name.");
+                          }
+                        }
+                      }}
+                    />
                   </div>
                 )}
               </div>
             </div>
-          )}
+
+            {/* Toolbar: font family, size, bold, italic, underline, color, alignment, chunk size */}
+            <div className="note-toolbar flex flex-wrap items-center gap-2 bg-gray-100 p-2 rounded mb-4">
+              {/* Font Family */}
+              <select
+                value={fontFamily}
+                onChange={(e) => setFontFamily(e.target.value)}
+                className="text-sm border rounded px-2 py-1"
+              >
+                <option value="OpenDyslexic">OpenDyslexic</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                <option value="'Helvetica, Arial, sans-serif'">Helvetica</option>
+                <option value="'Courier New', monospace">Courier</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="'Calibri', sans-serif">Calibri</option>
+                <option value="'Atkinson Hyperlegible', sans-serif">Atkinson Hyperlegible</option>
+                <option value="'Century Gothic', sans-serif">Century Gothic</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+              </select>
+
+              {/* Font Size */}
+              <div className="flex items-center space-x-1">
+                <input
+                  type="number"
+                  className="w-16 text-sm border rounded px-1 py-0.5 text-center"
+                  min={8}
+                  max={72}
+                  value={fontSize}
+                  onChange={(e) => setFontSize(Number(e.target.value))}
+                />
+                <span className="text-xs text-gray-500">px</span>
+              </div>
+
+              {/* Bold, Italic, Underline */}
+              <button
+                onClick={() => setIsBold(!isBold)}
+                className={`text-sm border rounded px-2 py-1 ${
+                  isBold ? "bg-blue-100 font-bold" : ""
+                }`}
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                onClick={() => setIsItalic(!isItalic)}
+                className={`text-sm border rounded px-2 py-1 ${
+                  isItalic ? "bg-blue-100 italic" : ""
+                }`}
+                title="Italic"
+              >
+                I
+              </button>
+              <button
+                onClick={() => setIsUnderline(!isUnderline)}
+                className={`text-sm border rounded px-2 py-1 ${
+                  isUnderline ? "bg-blue-100 underline" : ""
+                }`}
+                title="Underline"
+              >
+                U
+              </button>
+
+              {/* Text Color */}
+              <div className="flex items-center space-x-1" title="Text Color">
+                <span className="text-sm font-semibold">A</span>
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  className="border rounded p-1 w-6 h-6 cursor-pointer"
+                />
+              </div>
+
+              {/* Background Color */}
+              <div className="flex items-center space-x-1" title="Background Color">
+                <i className="fas fa-fill-drip text-sm" />
+                <input
+                  type="color"
+                  value={backgroundColor}
+                  onChange={(e) => setBackgroundColor(e.target.value)}
+                  className="border rounded p-1 w-6 h-6 cursor-pointer"
+                />
+              </div>
+
+              {/* Line Height */}
+              <div className="flex items-center space-x-1" title="Line Height">
+                <i className="fas fa-text-height text-sm" />
+                <input
+                  type="number"
+                  className="w-16 text-sm border rounded px-1 py-0.5 text-center"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={lineHeight}
+                  onChange={(e) => setLineHeight(Number(e.target.value))}
+                />
+              </div>
+
+              {/* Letter Spacing */}
+              <div className="flex items-center space-x-1" title="Letter Spacing">
+                <i className="fas fa-text-width text-sm" />
+                <input
+                  type="number"
+                  className="w-16 text-sm border rounded px-1 py-0.5 text-center"
+                  value={letterSpacing}
+                  onChange={(e) => setLetterSpacing(Number(e.target.value))}
+                />
+              </div>
+
+              {/* Alignment */}
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => setAlignment("left")}
+                  className={`text-sm border rounded px-2 py-1 ${
+                    alignment === "left" ? "bg-blue-100" : ""
+                  }`}
+                  title="Align Left"
+                >
+                  <i className="fas fa-align-left" />
+                </button>
+                <button
+                  onClick={() => setAlignment("center")}
+                  className={`text-sm border rounded px-2 py-1 ${
+                    alignment === "center" ? "bg-blue-100" : ""
+                  }`}
+                  title="Align Center"
+                >
+                  <i className="fas fa-align-center" />
+                </button>
+                <button
+                  onClick={() => setAlignment("right")}
+                  className={`text-sm border rounded px-2 py-1 ${
+                    alignment === "right" ? "bg-blue-100" : ""
+                  }`}
+                  title="Align Right"
+                >
+                  <i className="fas fa-align-right" />
+                </button>
+                <button
+                  onClick={() => setAlignment("justify")}
+                  className={`text-sm border rounded px-2 py-1 ${
+                    alignment === "justify" ? "bg-blue-100" : ""
+                  }`}
+                  title="Justify"
+                >
+                  <i className="fas fa-align-justify" />
+                </button>
+              </div>
+
+              {/* Chunk Size */}
+              <div className="flex items-center space-x-1">
+                <input
+                  type="number"
+                  className="w-16 text-sm border rounded px-1 py-0.5 text-center"
+                  min={1}
+                  max={999}
+                  value={chunkSize}
+                  onChange={(e) => setChunkSize(Number(e.target.value))}
+                />
+                <span className="text-sm">words</span>
+              </div>
+            </div>
+
+            {/* Editor area (chunk display or editing) */}
+            <div className="note-editor border border-gray-300 bg-white rounded mb-4">
+              {isEditing ? (
+                <textarea
+                  value={editedChunk}
+                  onChange={(e) => setEditedChunk(e.target.value)}
+                  style={textChunkStyle}
+                  className="w-full rounded outline-none"
+                />
+              ) : (
+                <div
+                  className="whitespace-pre-wrap text-start rounded"
+                  style={textChunkStyle}
+                >
+                  {chunks[currentChunkIndex] || ""}
+                </div>
+              )}
+            </div>
+
+            {/* Editing / Navigation / Audio controls */}
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center mt-2">
+                {/* Chunk Editing Buttons */}
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={handleSaveChunk}
+                        className="bg-green-900 text-white px-3 py-1 rounded-full hover:bg-green-700 cursor-pointer "
+                      >
+                        Save Chunk
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="bg-none text-black border-2 px-3 py-0.5 -translate-x-1.5 rounded-full hover:bg-gray-300 cursor-pointer ml-2"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleEditChunk}
+                      className="bg-green-900 text-white px-3 py-1 rounded-full hover:bg-green-700 cursor-pointer"
+                    >
+                      Edit Chunk
+                    </button>
+                  )}
+                </div>
+
+                {/* Pagination for chunks */}
+                {chunks.length > 1 && (
+                  <div className="flex items-center justify-center -translate-x-96 rounded-3xl space-x-4">
+                    <button
+                      onClick={handlePrevChunk}
+                      disabled={isEditing || currentChunkIndex === 0}
+                      className={`px-2 rounded-full ${
+                        currentChunkIndex === 0 || isEditing
+                          ? "bg-darkgray/50 cursor-not-allowed border-2"
+                          : "bg-darkgray text-black hover:bg-gray-400 border-2 cursor-pointer"
+                      }`}
+                    >
+                      <i className="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentChunkIndex + 1} of {chunks.length}
+                    </span>
+                    <button
+                      onClick={handleNextChunk}
+                      disabled={isEditing || currentChunkIndex === chunks.length - 1}
+                      className={`px-2 rounded-full ${
+                        currentChunkIndex === chunks.length - 1 || isEditing
+                          ? "bg-darkgray/50 cursor-not-allowed border-2"
+                          : "bg-darkgray text-black hover:bg-gray-400 border-2 cursor-pointer"
+                      }`}
+                    >
+                      <i className="fa-solid fa-chevron-right"></i>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+
+            {/* Audio Generation */}
+            {audioUrl && (
+              <div className="my-8 w-3xl mx-auto  border-[1.5px] border-black rounded-full">
+                <audio controls src={audioUrl} className="w-full">
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
+            <div className="mt-2 flex justify-center">
+              <button
+                onClick={handleGenerateAudio}
+                disabled={loadingAudio}
+                className="w-48 py-2 px-4 bg-black text-white font-semibold rounded-full hover:bg-black/80 cursor-pointer"
+              >
+                {loadingAudio ? "Generating Audio..." : "Generate Audio"}
+              </button>
+            </div>
+        
+          </div>
         </div>
+        
       </div>
     </div>
   );

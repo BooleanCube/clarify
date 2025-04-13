@@ -29,3 +29,8 @@
   width: 100%;
   transform:translateY(6px);
 }
+
+.new-shadow{
+  box-shadow: none !important;
+  cursor: pointer;
+}

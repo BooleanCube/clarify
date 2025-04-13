@@ -2,9 +2,13 @@ import React, { useState, useEffect } from "react";
 import supabase from "@/supabase-client";
 import { useAuth } from "@/middleware";
 import { Link, useNavigate } from "react-router-dom";
-import { FiTrash2 } from "react-icons/fi";
-import { GrSearch } from "react-icons/gr";
 import Sidebar, { Note, Tag } from "@/components/ui/Sidebar"; // Adjust the import path as needed
+import { FiSidebar, FiHome, FiTrash2 } from "react-icons/fi";
+import { CgNotes } from "react-icons/cg";
+import { GrSearch } from "react-icons/gr";
+import UploadStep from "@/components/UploadStep";
+import { AiOutlineHeart, AiFillHeart } from "react-icons/ai"; // New heart icons
+
 
 const Dashboard: React.FC = () => {
   const { session } = useAuth();
@@ -15,7 +19,7 @@ const Dashboard: React.FC = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [isModalOpen, setisModalOpen] = useState<boolean>(false);
   const [noteName, setNoteName] = useState<string>("");
-  const [modalStep, setModalStep] = useState<"enterName" | "selectOption">("enterName");
+  const [modalStep, setModalStep] = useState<"enterName" | "selectOption" | "upload">("enterName");
 
   // UI states for sidebar and filters
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
@@ -23,9 +27,13 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [openMenus, setOpenMenus] = useState<Record<number, boolean>>({});
   const [showFavorites, setShowFavorites] = useState<boolean>(false);
+  const [selectedOption, setSelectedOption] = useState<"Document" | "Image" | "Text" | null>(null);
 
   const openModal = () => {
     console.log("open modal");
+    setNoteName("");
+    setSelectedOption(null);
+    setModalStep("enterName");
     setisModalOpen(true);
   };
 
@@ -34,12 +42,19 @@ const Dashboard: React.FC = () => {
     setisModalOpen(false);
     setModalStep("enterName");
     setNoteName("");
+    setSelectedOption(null);
   };
 
   const handleOptionSelect = (option: string) => {
     console.log(`Selected option: ${option}, Note name: ${noteName}`);
+    setSelectedOption(option as "Document" | "Image" | "Text");
+    setModalStep("upload");
+  };
+
+  const handleNoteCreated = (noteId: string) => {
+    console.log(`Note created with ID: ${noteId}`);
     closeModal();
-    navigate("/new", { state: { selectedOption: option, noteName } });
+    navigate(`/note/${noteId}`);
   };
 
   const fetchNotes = async () => {
@@ -235,6 +250,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Toggle favorite status for a note
   const handleFavorite = async (noteId: number) => {
     const targetNote = notes.find((note) => note.id === noteId);
     if (!targetNote) return;
@@ -307,14 +323,11 @@ const Dashboard: React.FC = () => {
               {tags.map((tag: Tag) => (
                 <span
                   key={tag.id}
-                  onClick={() =>
-                    setActiveTag(activeTag?.id === tag.id ? null : tag)
-                  }
-                  className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full ${
-                    activeTag?.id === tag.id
+                  onClick={() => setActiveTag(activeTag?.id === tag.id ? null : tag)}
+                  className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full ${activeTag?.id === tag.id
                       ? "bg-black text-white"
                       : "bg-white border-[1.5px] text-black"
-                  }`}
+                    }`}
                 >
                   {tag.name}
                   {activeTag?.id === tag.id && (
@@ -363,7 +376,7 @@ const Dashboard: React.FC = () => {
                       value={noteName}
                       onChange={(e) => setNoteName(e.target.value)}
                       placeholder="Note Name"
-                      className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none"
+                      className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
                       className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
@@ -384,7 +397,7 @@ const Dashboard: React.FC = () => {
                       Cancel
                     </button>
                   </>
-                ) : (
+                ) : modalStep === "selectOption" ? (
                   <>
                     <h2 className="text-lg font-bold mb-4">Select an Option</h2>
                     <div className="space-y-4">
@@ -414,14 +427,18 @@ const Dashboard: React.FC = () => {
                       Cancel
                     </button>
                   </>
+                ) : (
+                  <UploadStep
+                    noteName={noteName}
+                    selectedOption={selectedOption}
+                    onNoteCreated={handleNoteCreated}
+                  />
                 )}
               </div>
             </div>
           )}
-          <div
-            className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200"
-          >
-            <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
+          <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
+            <button className="text-3xl tracking-wider py-6 font-semibold new-shadow" onClick={openModal}>
               + New Note
             </button>
           </div>
@@ -450,17 +467,30 @@ const Dashboard: React.FC = () => {
                           className="inline-flex items-center px-3 py-1 rounded-full bg-white border-[1.5px] text-black text-xs"
                         >
                           {tag.name}
-                          <FiTrash2
-                            className="ml-1 hover:text-red-500 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteNoteTag(note.id, tag.id);
-                            }}
-                          />
                         </span>
                       ))}
                     </div>
                   </Link>
+                  {/* Heart icon at the bottom right */}
+                  <div className="absolute bottom-2 right-2">
+                    {note.favorite ? (
+                      <AiFillHeart
+                        className="text-red-500 w-6 h-6 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFavorite(note.id);
+                        }}
+                      />
+                    ) : (
+                      <AiOutlineHeart
+                        className="text-gray-500 w-6 h-6 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFavorite(note.id);
+                        }}
+                      />
+                    )}
+                  </div>
                   <div className="absolute top-2 right-2">
                     <button
                       className="text-gray-500 hover:text-gray-700 px-2"
@@ -481,15 +511,6 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           Add Tag
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFavorite(note.id);
-                          }}
-                        >
-                          {note.favorite ? "Unfavorite" : "Favorite"}
                         </button>
                         <button
                           className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
