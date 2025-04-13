@@ -386,7 +386,7 @@ const Dashboard: React.FC = () => {
             </button>
             {/* Modal for adding a new note */}
           {isModalOpen && (
-           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-lg p-6 w-96">
                 {modalStep === "enterName" ? (
                   // Step 1: Enter Note Name
