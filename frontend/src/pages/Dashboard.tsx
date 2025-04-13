@@ -175,6 +175,9 @@ const Dashboard: React.FC = () => {
           tag_id: selectedTag.id,
         },
       ]);
+
+      console.log("Linking tag to note:", { noteId, tagId: selectedTag.id });
+      console.log("Error:", error);
   
       if (error) {
         console.error("Error linking tag to note:", error);
@@ -231,6 +234,8 @@ const Dashboard: React.FC = () => {
 
   const handleFavorite = async (noteId: number) => {
     const targetNote = notes.find((note) => note.id === noteId);
+    console.log("Target note:", targetNote);
+    console.log("Note ID:", noteId);
     if (!targetNote) return;
   
     const newFavoriteValue = !targetNote.favorite;
@@ -449,70 +454,81 @@ const Dashboard: React.FC = () => {
             </div>
           )}
           </div>
-          {/* Render filtered notes for main content */}
           <div className="space-y-4">
-            {filteredNotes.map((note: Note) => {
-              if(showFavorites && !note.favorite) return (<></>)
-                
-              return (
-                <Link to={`/note/${note.id}`} className="cursor-pointer p-4" key={note.id}>
-                  <div
-                    key={note.id}
-                    className="bg-white p-4 rounded shadow relative"
-                  >
-                    {/* Note Title & Dots Menu Button */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-semibold">{note.title}</div>
-                      <div className="relative">
-                        <button
-                          className="text-gray-500 hover:text-gray-700 px-2"
-                          onClick={() => toggleMenu(note.id)}
-                        >
-                          <span className="text-xl font-bold">...</span>
-                        </button>
-                        {openMenus[note.id] && (
-                          <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
-                            <button
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                              onClick={() => handleAddNoteTag(note.id)}
-                            >
-                              Add Tag
-                            </button>
-                            <button
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                              onClick={() => handleFavorite(note.id)}
-                            >
-                              {note.favorite
-                                ? "Unfavorite"
-                                : "Favorite"}
-                            </button>
-                            <button
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                              onClick={() => handleDelete(note.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">{note.content}</p>
-                    <div className="mt-2 flex space-x-2">
-                      {note.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-block bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </Link>
-                
-              )
-            })}
+  {filteredNotes.map((note: Note) => {
+    if (showFavorites && !note.favorite) return null;
+    return (
+      <div key={note.id} className="relative">
+        {/* Note Content (Clickable) */}
+        <Link
+          to={`/note/${note.id}`}
+          className="cursor-pointer p-4 block bg-white p-4 rounded shadow relative"
+        >
+          {/* Note Title & Dots Menu Button */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-semibold">{note.title}</div>
           </div>
+          <p className="text-sm text-gray-600">{note.content}</p>
+          <div className="mt-2 flex space-x-2">
+            {note.tags.map((tag, idx) => (
+              <span
+                key={idx}
+                className="inline-block bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </Link>
+
+        {/* Dots Menu (Absolutely Positioned) */}
+        <div className="absolute top-2 right-2">
+          <button
+            className="text-gray-500 hover:text-gray-700 px-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMenu(note.id);
+            }}
+          >
+            <span className="text-xl font-bold">...</span>
+          </button>
+          {openMenus[note.id] && (
+            <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddNoteTag(note.id);
+                }}
+              >
+                Add Tag
+              </button>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFavorite(note.id);
+                }}
+              >
+                {note.favorite ? "Unfavorite" : "Favorite"}
+              </button>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(note.id);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  })}
+</div>
+
         </main>
       </div>
     </div>
