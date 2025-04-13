@@ -218,21 +218,21 @@ const UploadStep: React.FC<UploadStepProps> = ({ noteName, selectedOption, onNot
     <div className="p-6 max-w-md mx-auto">
       {selectedOption === "Document" && (
         <>
-          <h1 className="text-2xl font-bold text-center mb-4">Upload a file (.pdf, .docx)</h1>
+          <h1 className="text-xl font-bold text-center mb-4">Upload a file (.pdf, .docx)</h1>
           <input
             type="file"
             accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50
+            className="block w-full text-sm text-gray-900 border border-gray-500 p-2 rounded-lg cursor-pointer bg-gray-50
                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
           />
           <button
             onClick={handleUpload}
-            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full bg-black text-white text-xl px-4 py-2 rounded-full cursor-pointer hover:bg-gray-800"
           >
             Upload
           </button>
+          
         </>
       )}
       {selectedOption === "Image" && (
@@ -242,8 +242,8 @@ const UploadStep: React.FC<UploadStepProps> = ({ noteName, selectedOption, onNot
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+            className="block w-full text-sm text-gray-900 border border-gray-500 p-2 rounded-lg cursor-pointer bg-gray-50
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
           />
           {isProcessing && (
             <div className="mb-4">
@@ -261,11 +261,11 @@ const UploadStep: React.FC<UploadStepProps> = ({ noteName, selectedOption, onNot
           <button
             onClick={handleUpload}
             disabled={isProcessing}
-            className={`w-full py-2 px-4 font-semibold rounded-lg shadow-md
+            className={`w-full py-2 px-4 font-semibold rounded-full shadow-md
                               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                               ${isProcessing
                                 ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                : 'w-full bg-black text-white text-xl px-4 py-2 rounded-full cursor-pointer hover:bg-gray-800'}`}
           >
             {isProcessing ? 'Processing...' : 'Upload'}
           </button>
@@ -282,8 +282,7 @@ const UploadStep: React.FC<UploadStepProps> = ({ noteName, selectedOption, onNot
           ></textarea>
           <button
             onClick={handleUpload}
-            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full bg-black text-white text-xl px-4 py-2 rounded-full cursor-pointer hover:bg-gray-800"
           >
             Save Text
           </button>
