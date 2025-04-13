@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
+    "@google-cloud/text-to-speech": "^6.0.1",
     "@google/genai": "^0.7.0",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-slot": "^1.2.0",

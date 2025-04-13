@@ -6,6 +6,10 @@ import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
 import { CgNotes } from "react-icons/cg";
 import { GrSearch } from "react-icons/gr";
 
+// import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
+// import { CgNotes } from "react-icons/cg";
+// import { GrSearch } from "react-icons/gr";
+
 interface Tag {
   id: number;
   name: string;
