@@ -363,22 +363,20 @@ const Dashboard: React.FC = () => {
         {/* Scrollable Notes Area */}
         <main className="flex-1 p-12 overflow-auto">
           {isModalOpen && (
-            <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-100">
-              <div className="bg-gray-50 rounded-lg shadow-lg p-6 w-96">
+            <div className="fixed inset-0 bg-black/50 bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+              <div className="bg-offwhite rounded-lg shadow-lg p-12 w-96">
                 {modalStep === "enterName" ? (
                   <>
-                    <h2 className="text-lg font-bold mb-4">
-                      Enter a Name for Your Note
-                    </h2>
+                    <h2 className="text-2xl font-bold mb-4">Enter a Name for Your Note:</h2>
                     <input
                       type="text"
-                      value={noteName}
+                      value={noteName} 
                       onChange={(e) => setNoteName(e.target.value)}
                       placeholder="Note Name"
-                      className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-black px-3 py-2 text-lg rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
-                      className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                      className="w-full bg-black text-white text-lg px-4 py-2 rounded-full cursor-pointer hover:bg-gray-800"
                       onClick={() => {
                         if (noteName.trim() === "") {
                           alert("Please enter a name for your note.");
@@ -390,7 +388,7 @@ const Dashboard: React.FC = () => {
                       Next
                     </button>
                     <button
-                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      className="bg-none text-black border-[1.5px] text-lg w-full mt-3 px-4 py-1.5 rounded-full hover:bg-gray-300/80 cursor-pointer"
                       onClick={closeModal}
                     >
                       Cancel
@@ -398,29 +396,29 @@ const Dashboard: React.FC = () => {
                   </>
                 ) : modalStep === "selectOption" ? (
                   <>
-                    <h2 className="text-lg font-bold mb-4">Select an Option</h2>
-                    <div className="space-y-4">
+                    <h2 className="text-2xl font-bold mb-2">Select an Option</h2>
+                    <div className="">
                       <button
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                        className="w-full bg-black text-white text-lg px-4 py-2 mt-4  rounded-full cursor-pointer hover:bg-gray-800"
                         onClick={() => handleOptionSelect("Document")}
                       >
                         Document
                       </button>
                       <button
-                        className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                        className="bg-darkgray text-black text-lg border-[1.5px] w-full mt-4  px-4 py-1.5 rounded-full hover:bg-darkgray/80 cursor-pointer"
                         onClick={() => handleOptionSelect("Image")}
                       >
                         Image
                       </button>
                       <button
-                        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                        className="bg-darkgray/40 text-lg text-black border-[1.5px] w-full mt-4 px-4 py-1.5 rounded-full hover:bg-darkgray/70 cursor-pointer"
                         onClick={() => handleOptionSelect("Text")}
                       >
                         Text
                       </button>
                     </div>
                     <button
-                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      className="bg-none text-black text-lg border-[1.5px] w-full mt-4 px-4 py-1.5 rounded-full hover:bg-gray-300/80 cursor-pointer"
                       onClick={closeModal}
                     >
                       Cancel
@@ -437,7 +435,7 @@ const Dashboard: React.FC = () => {
             </div>
           )}
           <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
-            <button className="text-3xl tracking-wider py-6 font-semibold new-shadow" onClick={openModal}>
+            <button className="text-2xl tracking-wider py-6 font-semibold new-shadow" onClick={openModal}>
               + New Note
             </button>
           </div>
@@ -492,13 +490,13 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="absolute top-2 right-2">
                     <button
-                      className="text-gray-500 hover:text-gray-700 px-2"
+                      className="text-gray-500 hover:text-gray-700 px-2 new-shadow"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleMenu(note.id);
                       }}
                     >
-                      <span className="text-xl font-bold">...</span>
+                      <span className="text-2xl font-bold">...</span>
                     </button>
                     {openMenus[note.id] && (
                       <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">

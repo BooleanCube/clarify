@@ -471,6 +471,7 @@ const Note: React.FC = () => {
         showFavorites={showFavorites}
         setShowFavorites={setShowFavorites}
       />
+    
 
       {/* Main Content */}
       <div className={`flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "md:ml-64" : "md:ml-20"}`}>
@@ -817,28 +818,27 @@ const Note: React.FC = () => {
 
 
 
-            {/* Audio Generation */}
-            {audioUrl && (
-              <div className="my-8 w-3xl mx-auto  border-[1.5px] border-black rounded-full">
-                <audio controls src={audioUrl} className="w-full">
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            )}
-            <div className="mt-2 flex justify-center">
-              <button
-                onClick={handleGenerateAudio}
-                disabled={loadingAudio}
-                className="w-48 py-2 px-4 bg-black text-white font-semibold rounded-full hover:bg-black/80 cursor-pointer"
-              >
-                {loadingAudio ? "Generating Audio..." : "Generate Audio"}
-              </button>
-            </div>
-        
+          {/* Audio Generation */}
+          {audioUrl && (
+          <div className="my-8 w-3xl mx-auto  border-[1.5px] border-black rounded-full">
+            <audio controls src={audioUrl} className="w-full">
+              Your browser does not support the audio element.
+            </audio>
           </div>
+        )}
+        <div className="mt-2 flex justify-center">
+          <button
+            onClick={handleGenerateAudio}
+            disabled={loadingAudio}
+            className="w-48 py-2 px-4 mt-2 bg-black text-white font-semibold rounded-full hover:bg-black/80 cursor-pointer"
+          >
+            {loadingAudio ? "Generating Audio..." : "Generate Audio"}
+          </button>
         </div>
         
       </div>
+    </div>
+    </div>
     </div>
   );
 };
