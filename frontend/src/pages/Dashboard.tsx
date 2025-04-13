@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import supabase from "@/supabase-client";
 import { useAuth } from "@/middleware";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface Tag {
   id: number;
@@ -21,10 +22,31 @@ interface Note {
 const Dashboard: React.FC = () => {
   const { session } = useAuth();
   const pid = session?.user.id
+  const navigate = useNavigate();
 
   // Use state for notes so they can be updated
   const [notes, setNotes] = useState<Note[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+
+  // add function to do button shit
+  const [isModalOpen, setisModalOpen] = useState<boolean>(false);
+
+  const openModal = () => {
+    console.log("open modal")
+    setisModalOpen(true);
+  }
+
+  const closeModal = () => {
+    console.log("close modal")
+    setisModalOpen(false);
+  }
+
+  const handleOptionSelect = (option: string) => {
+    console.log(`Selected option: ${option}`);
+    closeModal();
+    // Navigate to the new note page with the selected option
+    navigate("/new", {state: {selectedOption: option}});
+  } 
 
   const fetchNotes = async () => {
     const { data, error } = await supabase
@@ -342,8 +364,41 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
-          <div className="bg-white rounded shadow p-6 mb-4 flex justify-center items-center text-xl font-semibold text-gray-700">
+          {/* <div className="bg-white rounded shadow p-6 mb-4 flex justify-center items-center text-xl font-semibold text-gray-700">
             + New
+          </div> */}
+          <div className="bg-white p-4 rounded shadow mb-4 flex items-center justify-center cursor-pointer hover:bg-gray-100">
+            <button className="text-2xl font-bold cursor-pointer hover:bg-gray-100"
+              onClick={openModal}
+            >
+              + New Note
+            </button>
+            {/* Modal for adding a new note */}
+            {isModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                  <h2 className="text-lg font-bold mb-4">Select an Option</h2>
+                  <div className="space-y-4">
+                    <button
+                      className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                      onClick={() => handleOptionSelect("Document")}
+                    > Document </button>
+                    <button
+                      className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                      onClick={() => handleOptionSelect("Image")}
+                    > Image </button>
+                    <button
+                      className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                      onClick={() => handleOptionSelect("Text")}
+                    > Text </button>
+                  </div>
+                  <button
+                    className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                    onClick={closeModal}
+                  > Cancel </button>
+                </div>
+              </div>
+            )}
           </div>
           {/* Render filtered notes for main content */}
           <div className="space-y-4">
