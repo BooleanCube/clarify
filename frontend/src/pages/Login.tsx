@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import Google from '../assets/web_neutral_rd_na.svg';
 
 import { Link } from "react-router-dom";
 
@@ -72,152 +73,130 @@ const Login: React.FC = () => {
   };
 
   return (
-    // Outer container matching the example page's full-page style
-    <div className="flex flex-col items-center w-full bg-pearl min-h-[calc(100vh-10rem)] justify-center pt-28">
-      {/* Inner container that holds the login form */}
-      <div className="px-8 pt-8 pb-12 rounded-3xl max-w-md w-full bg-white shadow-md">
-        {isResetMode ? (
-          <>
-            <h1 className="text-3xl font-extrabold text-center text-blue-500 mb-4">
-              Forgot your password?
-            </h1>
-            <p className="font-Sora text-blue-500 text-md mb-4">
-              Enter your email address and we’ll send you a link to reset your password.
-            </p>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div>
-                <Label
-                  htmlFor="resetEmail"
-                  className="font-Dongle text-blue-500 text-3xl"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="resetEmail"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
-                  required
-                  className="w-full p-2 border-2 border-lightblue bg-lightlavender font-Sora rounded-xl text-blue-500"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-pearl text-blue-500 font-semibold py-2 rounded-xl border-2 shadow-md hover:bg-blue-500 hover:text-pearl transition"
-              >
-                Send Reset Email
-              </Button>
-            </form>
-            <div className="mt-4 flex flex-col items-center gap-2">
-              <p className="text-sm">
-                <button
-                  type="button"
-                  onClick={() => setIsResetMode(false)}
-                  className="text-blue-500 hover:underline"
-                >
-                  Back to Login
-                </button>
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className="text-3xl font-extrabold text-center text-black-500 mb-4">
-              Welcome back to Clarify
-            </h1>
-            <p className="font-Sora text-black-500 text-md mb-4 text-center">
-              Login to your account!
-            </p>
+    <div className="flex flex-col items-center w-full bg-pearl h-auto min-h-[calc(100vh-10rem)] justify-center pt-28 sm:pt-32 pb-16">
+  <p className=" text-4xl pb-1 font-extrabold">Welcome back to Clarify</p>
+  <p className="text-md font-light mb-8 mt-2">Login to your account!</p>
+
+  <div className="p-8 pb-12 rounded-3xl max-w-md w-full bg-offwhite shadow-md">
+    {isResetMode ? (
+      <>
+        <h2 className="text-3xl font-extrabold text-center mb-4">
+          Forgot your password?
+        </h2>
+        <p className="text-md mb-4 text-center">
+          Enter your email and we'll send a reset link.
+        </p>
+        <form onSubmit={handleForgotPassword} className="flex flex-col">
+          <p className="text-3xl">Email</p>
+          <Input
+            id="resetEmail"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full p-2 border-[1.5px] rounded-xl"
+          />
+          <div className="pt-6">
             <Button
-              onClick={handleSignInWithGoogle}
-              className="w-full bg-pearl text-blue-500 font-semibold py-2 rounded-xl border-2 shadow-md hover:bg-blue-500 hover:text-pearl transition"
-              variant="outline"
+              type="submit"
+              className="w-full font-semibold py-2 rounded-xl border-[1.5px] shadow-md hover:bg-darkgray transition"
             >
-              Sign in with Google
+              Send Reset Email
             </Button>
-            <div className="my-4 flex items-center justify-center">
-              <span className="text-3xl font-Dongle text-black-500">or</span>
-            </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label
-                  htmlFor="email"
-                  className="font-Dongle text-black-500 text-3xl"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
-                  required
-                  className="w-full p-2 border-2 border-lightblue bg-lightlavender font-Sora rounded-xl text-blue-500"
-                />
-              </div>
-              <div>
-                <Label
-                  htmlFor="password"
-                  className="font-Dongle text-black-500 text-3xl"
-                >
-                  Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setPassword(e.target.value)
-                    }
-                    required
-                    className="w-full p-2 border-2 border-lightblue bg-lightlavender font-Sora rounded-xl text-blue-500 pr-20"
-                  />
-                  {/* Plain button styled as text, not as a box */}
-                  <Button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 bg-transparent"
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </Button>
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-midblue border-2 border-darkblue text-blue-500 hover:bg-darkblue text-pearl font-semibold py-2.5 rounded-full shadow-md transition"
-              >
-                Login
-              </Button>
-              <div className="mt-4 flex flex-col items-center gap-2">
-                <p className="text-sm text-black-500">
-                  Don't have an account?{" "}
-                  <Link to="/register" className="text-blue-500 hover:underline">
-                    Register
-                  </Link>
-                </p>
-                <p className="text-sm text-blue-500">
-                  <button
-                    type="button"
-                    onClick={() => setIsResetMode(true)}
-                    className="text-blue-500 hover:underline"
-                  >
-                    Forgot your password?
-                  </button>
-                </p>
-              </div>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
+          </div>
+        </form>
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsResetMode(false)}
+            className=" hover:underline text-sm"
+          >
+            Back to Login
+          </button>
+        </div>
+      </>
+    ) : (
+      <>
+        <h2 className="text-3xl font-extrabold text-center mb-6">
+          Log in
+        </h2>
+        <button
+          onClick={handleSignInWithGoogle}
+          className="w-full justify-center items-center flex  bg-pearl font-semibold py-1 rounded-2xl border-[1.5px] mb-6  hover:shadow-lg transition"
+        >
+          <img src={Google} alt="Google" className="mr-2" />
+          Sign in with Google
+        </button>
+
+        <div className="flex items-center space-x-2   my-4">
+          <div className="flex-grow border-b"></div>
+          <span className="text-xl font-bold">or</span>
+          <div className="flex-grow border-b"></div>
+        </div>
+
+        <form onSubmit={handleLogin} className="flex flex-col">
+          <div className="pb-2">
+            <p className="text-left font-bold pb-2 text-xl tracking-wide">Email</p>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full p-4 border-[1.5px] border-black mb-4 py-4  rounded-full  "
+            />
+          </div>
+          <p className="text-left font-bold pb-2 text-xl tracking-wide">Password</p>
+          <div className="relative w-full pb-2">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full p-4 border-[1.5px] border-black rounded-full py-4 pr-20"
+            />
+           <Button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3/5 transform -translate-y-3/4 text-sm font-semibold bg-transparent text-black p-0 m-0"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </Button>
+
+          </div>
+
+          <div className="flex justify-center pt-8 pb-2">
+            <Button
+              type="submit"
+              className="bg-lightgray/30 border-[1.5px] border-black hover:bg-darkgray/30 w-40 font-semibold py-3 rounded-full shadow-md text-black transition"
+            >
+              Login
+            </Button>
+          </div>
+          <p className="text-sm text-center mt-2">
+            Don't have an account?{" "}
+            <Link to="/register">
+              <span className="font-extrabold underline">Register</span>
+            </Link>
+          </p>
+          <p className="text-sm text-center mt-1">
+            <button
+              type="button"
+              onClick={() => setIsResetMode(true)}
+              className="underline cursor-pointer" 
+            >
+              Forgot your password?
+            </button>
+          </p>
+        </form>
+      </>
+    )}
+  </div>
+</div>
   );
 };
 

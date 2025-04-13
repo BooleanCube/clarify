@@ -97,7 +97,7 @@ const Navbar = () => {
               {name}
             </li>
             <li className="text-md tracking-wide translate-y-20">
-              <button onClick={handleLogout} className="text-4xl">
+              <button onClick={handleLogout} className="text-4xl text-red-500">
                 Logout
               </button>
             </li>

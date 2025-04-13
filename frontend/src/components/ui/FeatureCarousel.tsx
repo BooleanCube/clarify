@@ -78,7 +78,7 @@ export default function FeatureCarousel() {
   }
 
   return (
-    <div className="max-md:w-3/4 max-lg:w-11/12 max-w-6xl mx-auto space-y-4">
+    <div className="w-full max-w-6xl mx-auto space-y-4">
       <Carousel
         opts={{ loop: true }}
         setApi={setApi}
