@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Groq from "groq-sdk";
 import supabase from "@/supabase-client";
+import { useAuth } from "@/middleware";
 
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY,
@@ -13,9 +14,30 @@ interface NoteProps {
   name: string;
   content: string;
   favorite: boolean;
+  preset_id: number;
+}
+
+interface Preset {
+  id?: number,
+  name: string;
+  font_size: number;
+  line_height: number;
+  letter_spacing: number;
+  text_color: string;
+  background_color: string;
+  font_family: string;
+  font_bold: boolean;
+  font_italic: boolean;
+  font_underline: boolean;
+  alignment: "left" | "center" | "right" | "justify";
+  chunk_size: number;
+  profile_id: string | undefined;
 }
 
 const Note: React.FC = () => {
+  const { session } = useAuth();
+  const pid = session?.user.id;
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,6 +74,66 @@ const Note: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedChunk, setEditedChunk] = useState<string>("");
 
+  const [presets, setPresets] = useState<Preset[]>([]);
+
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+
+  const setPresetData = async (selectedPresetData: Preset) => {
+    if (selectedPresetData) {
+      setFontSize(selectedPresetData.font_size);
+      setLineHeight(selectedPresetData.line_height);
+      setLetterSpacing(selectedPresetData.letter_spacing);
+      setTextColor(selectedPresetData.text_color);
+      setBackgroundColor(selectedPresetData.background_color);
+      setFontFamily(selectedPresetData.font_family);
+      setIsBold(selectedPresetData.font_bold);
+      setIsItalic(selectedPresetData.font_italic);
+      setIsUnderline(selectedPresetData.font_underline);
+      setAlignment(selectedPresetData.alignment);
+      setChunkSize(selectedPresetData.chunk_size);
+
+      if (selectedPresetData?.id) {
+        const { data, error } = await supabase
+          .from("notes")
+          .update({ preset_id: selectedPresetData.id })
+          .eq("id", note?.id);
+      
+        if (error) {
+          console.error("Error updating preset id:", error);
+        } else {
+          console.log("Preset id updated:", data);
+        }
+      }
+    }
+  }
+
+  const handlePresetChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const presetName = e.target.value;
+    setSelectedPreset(presetName);
+
+    const selectedPresetData = presets.find((p: Preset) => p.name === presetName);
+
+    if(selectedPresetData) await setPresetData(selectedPresetData)
+  };
+
+  useEffect(() => {
+    async function fetchPresets() {
+      if (!pid) return;
+      const { data, error } = await supabase
+        .from("presets")
+        .select("*")
+        .eq("profile_id", pid);
+      if (error) {
+        console.error("Error fetching presets:", error);
+      } else if (data) {
+        setPresets(data);
+      }
+    }
+    
+    fetchPresets();
+  }, [pid]);
+
+  // Fetch note data from Supabase based on URL ID
   // Inject external font links for Google Fonts (for Atkinson Hyperlegible and Open Sans)
   useEffect(() => {
     const linkPreconnect1 = document.createElement("link");
@@ -126,7 +208,7 @@ const Note: React.FC = () => {
     };
   }, []);
 
-  // Fetch note data from Supabase based on URL ID.
+  // Fetch note data from Supabase based on URL ID.\
   useEffect(() => {
     async function fetchNoteContent() {
       let path = location.pathname;
@@ -151,12 +233,15 @@ const Note: React.FC = () => {
         alert(error.message);
       } else if (data) {
         setNote(data);
+
+        const selectedPresetData = presets.find((p: Preset) => p.id === data.preset_id);
+        if(selectedPresetData) setPresetData(selectedPresetData);
         // Initialize editedName with the fetched note name
         setEditedName(data.name);
       }
     }
     fetchNoteContent();
-  }, [location, navigate]);
+  }, [location, navigate, presets, pid]);
 
   useEffect(() => {
     if (note) {
@@ -214,10 +299,20 @@ const Note: React.FC = () => {
     }
   };
 
-  // Save Preset (stub function)
-  const handleSavePreset = () => {
-    alert("Preset saved! (This is a stub function.)");
+  const handleSavePreset = async (current: Preset) => {
+    const { data, error } = await supabase
+      .from("presets")
+      .insert([current]);
+  
+    if (error) {
+      console.log("Error inserting preset:", error);
+    } else if (data) {
+      // Append the newly inserted preset (data[0]) to the current presets.
+      setPresets((prev) => [...prev, data[0]]);
+    }
+    return data;
   };
+  
 
   // Chunk editing functions
   const handleEditChunk = () => {
@@ -496,6 +591,70 @@ const Note: React.FC = () => {
               />
               <span className="text-sm">words</span>
             </div>
+
+            {/* Separator */}       
+            <span className="text-gray-400">•</span>
+
+            <div className="relative">
+                <select
+                    value={selectedPreset || ""}
+                    onChange={handlePresetChange}
+                    className="text-sm border rounded px-2 py-1"
+                >
+                  <option value="" disabled>
+                      Default
+                  </option>
+                    {presets.map((preset) => (
+                        <option key={preset.name} value={preset.name}>
+                            {preset.name}
+                        </option>
+                    ))}
+                  <option value="save-current">Save Current Settings as Preset</option>
+                </select>
+
+                {/* Save Current Preset Logic */}
+                {selectedPreset === "save-current" && (
+                    <div className="absolute top-full mt-2 bg-white border rounded shadow-md p-4 z-10">
+                        <p className="text-sm mb-2">Enter a name for your preset:</p>
+                        <input
+                            type="text"
+                            className="border rounded px-2 py-1 w-full text-sm"
+                            placeholder="Preset Name"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    const presetName = (e.target as HTMLInputElement).value.trim();
+                                    if (presetName) {
+                                        const newPreset: Preset = {
+                                            name: presetName,
+                                            font_size: fontSize,
+                                            line_height: lineHeight,
+                                            letter_spacing: letterSpacing,
+                                            text_color: textColor,
+                                            background_color: backgroundColor,
+                                            font_family: fontFamily,
+                                            font_bold: isBold,
+                                            font_italic: isItalic,
+                                            font_underline: isUnderline,
+                                            alignment: alignment,
+                                            chunk_size: chunkSize,
+                                            profile_id: pid,
+                                        };
+
+                                        handleSavePreset(newPreset)
+                                        setSelectedPreset(null); // Reset dropdown
+                                    } else {
+                                        alert("Please enter a valid preset name.");
+                                    }
+                                }
+                            }}
+                        />
+                    </div>
+                )}
+            </div>
+          </div>
+        </>
+      )}
+      {/* Note content display / editing area */}
             <span className="text-gray-400">•</span>
             <button
               onClick={handleSavePreset}
