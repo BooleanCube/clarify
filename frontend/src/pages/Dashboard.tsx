@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
 import { CgNotes } from "react-icons/cg";
 import { GrSearch } from "react-icons/gr";
-
+import UploadStep from "@/components/UploadStep";
 // import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
 // import { CgNotes } from "react-icons/cg";
 // import { GrSearch } from "react-icons/gr";
@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [isModalOpen, setisModalOpen] = useState<boolean>(false);
   const [noteName, setNoteName] = useState<string>("");
-  const [modalStep, setModalStep] = useState<"enterName" | "selectOption">("enterName");
+  const [modalStep, setModalStep] = useState<"enterName" | "selectOption" | "upload">("enterName");
 
   // UI states for sidebar and filters
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
@@ -40,9 +40,13 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [openMenus, setOpenMenus] = useState<Record<number, boolean>>({});
   const [showFavorites, setShowFavorites] = useState<boolean>(false);
+  const [selectedOption, setSelectedOption] = useState<"Document" | "Image" | "Text" | null>(null);
 
   const openModal = () => {
     console.log("open modal");
+    setNoteName("");
+    setSelectedOption(null);
+    setModalStep("enterName");
     setisModalOpen(true);
   };
 
@@ -51,13 +55,22 @@ const Dashboard: React.FC = () => {
     setisModalOpen(false);
     setModalStep("enterName");
     setNoteName("");
+    setSelectedOption(null);
   };
 
   const handleOptionSelect = (option: string) => {
     console.log(`Selected option: ${option}, Note name: ${noteName}`);
-    closeModal();
-    navigate("/new", { state: { selectedOption: option, noteName } });
+    setSelectedOption(option as "Document" | "Image" | "Text");
+    setModalStep("upload");
+    // closeModal();
+    // navigate("/new", { state: { selectedOption: option, noteName } });
   };
+
+  const handleNoteCreated = (noteId: string) => {
+    console.log(`Note created with ID: ${noteId}`);
+    closeModal();
+    navigate(`/note/${noteId}`);
+  }
 
   const fetchNotes = async () => {
     const { data, error } = await supabase
@@ -420,80 +433,81 @@ const Dashboard: React.FC = () => {
         {/* Scrollable Notes Area */}
         <main className="flex-1 p-12 overflow-auto">
         {isModalOpen && (
-              <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-100">
-                <div className="bg-gray-50 rounded-lg shadow-lg p-6 w-96">
-                  {modalStep === "enterName" ? (
-                    <>
-                      <h2 className="text-lg font-bold mb-4">
-                        Enter a Name for Your Note
-                      </h2>
-                      <input
-                        type="text"
-                        value={noteName}
-                        onChange={(e) => setNoteName(e.target.value)}
-                        placeholder="Note Name"
-                        className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none"
-                      />
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                {modalStep === "enterName" ? (
+                  <>
+                    <h2 className="text-lg font-bold mb-4">Enter a Name for Your Note</h2>
+                    <input
+                      type="text"
+                      value={noteName}
+                      onChange={(e) => setNoteName(e.target.value)}
+                      placeholder="Note Name"
+                      className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                      onClick={() => {
+                        if (noteName.trim() === "") {
+                          alert("Please enter a name for your note.");
+                          return;
+                        }
+                        setModalStep("selectOption");
+                      }}
+                    >
+                      Next
+                    </button>
+                    <button
+                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : modalStep === "selectOption" ? (
+                  <>
+                    <h2 className="text-lg font-bold mb-4">Select an Option</h2>
+                    <div className="space-y-4">
                       <button
                         className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                        onClick={() => {
-                          if (noteName.trim() === "") {
-                            alert("Please enter a name for your note.");
-                            return;
-                          }
-                          setModalStep("selectOption");
-                        }}
+                        onClick={() => handleOptionSelect("Document")}
                       >
-                        Next
+                        Document
                       </button>
                       <button
-                        className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
-                        onClick={closeModal}
+                        className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                        onClick={() => handleOptionSelect("Image")}
                       >
-                        Cancel
+                        Image
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="text-lg font-bold mb-4">
-                        Select an Option
-                      </h2>
-                      <div className="space-y-4">
-                        <button
-                          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                          onClick={() => handleOptionSelect("Document")}
-                        >
-                          Document
-                        </button>
-                        <button
-                          className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                          onClick={() => handleOptionSelect("Image")}
-                        >
-                          Image
-                        </button>
-                        <button
-                          className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
-                          onClick={() => handleOptionSelect("Text")}
-                        >
-                          Text
-                        </button>
-                      </div>
                       <button
-                        className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
-                        onClick={closeModal}
+                        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                        onClick={() => handleOptionSelect("Text")}
                       >
-                        Cancel
+                        Text
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                    <button
+                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <UploadStep
+                    noteName={noteName}
+                    selectedOption={selectedOption}
+                    onNoteCreated={handleNoteCreated}
+                  />
+                )}
               </div>
-            )}
+            </div>
+          )}
           <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
             <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
               + New Note
             </button>
-            
           </div>
           {/* Notes Title and List */}
           <div className="space-y-4">
@@ -572,7 +586,7 @@ const Dashboard: React.FC = () => {
                         </button>
                       </div>
                     )}
-                  </div>
+                  </div>  
                 </div>
               );
             })}
