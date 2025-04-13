@@ -33,7 +33,7 @@ const Navbar = () => {
 
   const AuthDropdown = () => (
     <div className="relative group">
-      <button className="nav-color">{name}</button>
+      <button className="nav-color tracking-wide">{name}</button>
       <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
         <button
           onClick={handleLogout}

@@ -1,10 +1,8 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+import {FormEvent, useState } from "react";
 import supabase from "@/supabase-client";
 import { useNavigate, Link } from "react-router-dom";
-
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
 import Google from '../assets/web_neutral_rd_na.svg';
 
 const Register: React.FC = () => {
@@ -64,7 +62,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full bg-pearl h-auto min-h-[calc(100vh-10rem)] justify-center pt-28 sm:pt-32 pb-16">
+    <div className="flex flex-col items-center w-full bg-pearl h-auto min-h-[calc(100vh-10rem)] justify-center pt-28 sm:pt-32 pb-16" id="register">
       <p className="text-4xl pb-1 font-extrabold">Join us on Clarify</p>
       <p className="text-md font-light mb-8 mt-2">Create your account!</p>
 
@@ -114,7 +112,7 @@ const Register: React.FC = () => {
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="You@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -127,7 +125,7 @@ const Register: React.FC = () => {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -147,7 +145,7 @@ const Register: React.FC = () => {
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
-              placeholder="confirm password"
+              placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required

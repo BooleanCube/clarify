@@ -29,7 +29,7 @@ const Footer = () => {
     <footer className="w-screen -translate-x-20 z-50 shadow border-t-[1.5px] border-black/20 border-t-[1.5px] border-black/20 bg-darkgray px-20 py-8">
 
       <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 px-6">
-        <Link to="/" className="flex items-center space-x-2">
+        <Link to="/#home" className="flex items-center space-x-2">
           <img
             src={logo}
             alt="Logo"
@@ -43,13 +43,6 @@ const Footer = () => {
 
       {session ? (
         <>
-          <span className="nav-color font-medium">{name}</span>
-          <button
-            onClick={handleLogout}
-            className="nav-color"
-          >
-            Logout
-          </button>
         </>
       ) : (
         <>
