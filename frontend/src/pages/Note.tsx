@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import Groq from "groq-sdk";
 import supabase from "@/supabase-client";
 
@@ -28,6 +27,7 @@ const Note: React.FC = () => {
   const [letterSpacing, setLetterSpacing] = useState<number>(0);
   const [textColor, setTextColor] = useState<string>("#000000");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
+  // IMPORTANT: For OpenDyslexic to work correctly, set the family to exactly "OpenDyslexic"
   const [fontFamily, setFontFamily] = useState<string>("Garamond");
 
   const [isBold, setIsBold] = useState<boolean>(false);
@@ -48,30 +48,100 @@ const Note: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedChunk, setEditedChunk] = useState<string>("");
 
-  // Fetch note data from Supabase based on URL ID
+  // Inject external font links for Google Fonts (for Atkinson Hyperlegible and Open Sans)
+  useEffect(() => {
+    const linkPreconnect1 = document.createElement("link");
+    linkPreconnect1.rel = "preconnect";
+    linkPreconnect1.href = "https://fonts.googleapis.com";
+    document.head.appendChild(linkPreconnect1);
+
+    const linkPreconnect2 = document.createElement("link");
+    linkPreconnect2.rel = "preconnect";
+    linkPreconnect2.href = "https://fonts.gstatic.com";
+    linkPreconnect2.crossOrigin = "";
+    document.head.appendChild(linkPreconnect2);
+
+    const linkFonts = document.createElement("link");
+    linkFonts.rel = "stylesheet";
+    linkFonts.href =
+      "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&family=Open+Sans&display=swap";
+    document.head.appendChild(linkFonts);
+
+    return () => {
+      document.head.removeChild(linkPreconnect1);
+      document.head.removeChild(linkPreconnect2);
+      document.head.removeChild(linkFonts);
+    };
+  }, []);
+
+  // Inject multiple @font-face rules for OpenDyslexic, including Regular, Bold, Italic, and Bold Italic variants.
+  // Make sure these files exist at the specified paths in your public folder.
+  useEffect(() => {
+    const styleEl = document.createElement("style");
+    styleEl.innerHTML = `
+      /* OpenDyslexic Regular */
+      @font-face {
+        font-family: 'OpenDyslexic';
+        src: url('/fonts/OpenDyslexic-Regular.woff2') format('woff2'),
+             url('/fonts/OpenDyslexic-Regular.woff') format('woff');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      /* OpenDyslexic Bold */
+      @font-face {
+        font-family: 'OpenDyslexic';
+        src: url('/fonts/OpenDyslexic-Bold.woff2') format('woff2'),
+             url('/fonts/OpenDyslexic-Bold.woff') format('woff');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+      /* OpenDyslexic Italic */
+      @font-face {
+        font-family: 'OpenDyslexic';
+        src: url('/fonts/OpenDyslexic-Italic.woff2') format('woff2'),
+             url('/fonts/OpenDyslexic-Italic.woff') format('woff');
+        font-weight: 400;
+        font-style: italic;
+        font-display: swap;
+      }
+      /* OpenDyslexic Bold Italic */
+      @font-face {
+        font-family: 'OpenDyslexic';
+        src: url('/fonts/OpenDyslexic-BoldItalic.woff2') format('woff2'),
+             url('/fonts/OpenDyslexic-BoldItalic.woff') format('woff');
+        font-weight: 700;
+        font-style: italic;
+        font-display: swap;
+      }
+    `;
+    document.head.appendChild(styleEl);
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
+
+  // Fetch note data from Supabase based on URL ID.
   useEffect(() => {
     async function fetchNoteContent() {
       let path = location.pathname;
       if (path.at(path.length - 1) === "/") path = path.slice(0, -1);
       const idStr = path.substring(path.lastIndexOf("/") + 1);
-
       if (idStr.trim() === "") {
         navigate("/dashboard");
         return;
       }
-
       const id = Number(idStr.trimEnd());
       if (!Number.isInteger(id) || isNaN(id)) {
         navigate("/dashboard");
         return;
       }
-
       const { data, error } = await supabase
         .from("notes")
         .select("*")
         .eq("id", id)
         .single();
-
       if (error) {
         console.error("Error fetching note content:", error);
         alert(error.message);
@@ -79,12 +149,10 @@ const Note: React.FC = () => {
         setNote(data);
       }
     }
-
     fetchNoteContent();
   }, [location, navigate]);
 
   // Split note content into chunks whenever note content or chunkSize changes.
-  // We do not include any state from editing mode so that the chunks always reflect the saved note.
   useEffect(() => {
     if (note) {
       const parts = note.content.match(/(\S+\s*)/g);
@@ -94,7 +162,6 @@ const Note: React.FC = () => {
           newChunks.push(parts.slice(i, i + chunkSize).join(""));
         }
         setChunks(newChunks);
-        // Ensure currentChunkIndex is valid
         if (currentChunkIndex >= newChunks.length) {
           setCurrentChunkIndex(0);
         }
@@ -107,6 +174,7 @@ const Note: React.FC = () => {
       setCurrentChunkIndex((idx) => idx - 1);
     }
   };
+
   const handleNextChunk = () => {
     if (currentChunkIndex < chunks.length - 1 && !isEditing) {
       setCurrentChunkIndex((idx) => idx + 1);
@@ -146,7 +214,7 @@ const Note: React.FC = () => {
     alert("Preset saved! (This is a stub function.)");
   };
 
-  // When the user clicks Edit, start editing the current chunk only.
+  // Editing controls
   const handleEditChunk = () => {
     if (chunks[currentChunkIndex] !== undefined) {
       setIsEditing(true);
@@ -154,13 +222,10 @@ const Note: React.FC = () => {
     }
   };
 
-  // Save the edited chunk by merging it into the full note content and updating Supabase.
   const handleSaveChunk = async () => {
     if (!note) return;
-    // Replace the current chunk with the edited text.
     const updatedChunks = [...chunks];
     updatedChunks[currentChunkIndex] = editedChunk;
-    // Reassemble full note content.
     const newContent = updatedChunks.join("");
     const { error } = await supabase
       .from("notes")
@@ -171,26 +236,25 @@ const Note: React.FC = () => {
       alert("Failed to save note.");
       return;
     }
-    // Update the local note state with new content.
     setNote({ ...note, content: newContent });
     setChunks(updatedChunks);
     setIsEditing(false);
   };
 
-  // Cancel chunk editing
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedChunk("");
   };
 
-  // Define styling for the note/text preview area.
+  // Inline style for the note/text display.
+  // When using OpenDyslexic, the browser will choose the variant matching both the font-weight and font-style.
   const textChunkStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
     lineHeight: lineHeight,
     letterSpacing: `${letterSpacing}px`,
     color: textColor,
     backgroundColor: backgroundColor,
-    fontFamily,
+    fontFamily, // Make sure this value is exactly "OpenDyslexic" when you want to use that font.
     textAlign: alignment,
     width: "100%",
     height: "300px",
@@ -206,7 +270,6 @@ const Note: React.FC = () => {
       {note && (
         <>
           <h2 className="mt-24 text-xl font-semibold text-center">{note.name}</h2>
-
           {/* Chunk editing controls */}
           <div className="mt-2 text-center space-x-2">
             {isEditing ? (
@@ -236,21 +299,22 @@ const Note: React.FC = () => {
 
           {/* Toolbar with formatting controls */}
           <div className="mt-6 flex flex-wrap items-center gap-3 bg-gray-100 p-2 rounded justify-center">
-            {/* Font Family Dropdown */}
             <select
               value={fontFamily}
               onChange={(e) => setFontFamily(e.target.value)}
               className="text-sm border rounded px-2 py-1"
             >
-              <option value="Helvetica, sans-serif">Helvetica</option>
-              <option value="Courier, monospace">Courier</option>
+              {/* IMPORTANT: OpenDyslexic option now sets value exactly to "OpenDyslexic" */}
+              <option value="OpenDyslexic">OpenDyslexic</option>
               <option value="Arial, sans-serif">Arial</option>
+              <option value="'Comic Sans MS', cursive">Comic Sans</option>
+              <option value="'Helvetica, Arial, sans-serif'">Helvetica</option>
+              <option value="'Courier New', monospace">Courier</option>
               <option value="Verdana, sans-serif">Verdana</option>
-              <option value="'CMU Serif', serif">CMU Serif</option>
-              <option value="'OpenDyslexic', sans-serif">OpenDyslexic</option>
-              <option value="Roboto, sans-serif">Roboto</option>
-              <option value="Lato, sans-serif">Lato</option>
-              <option value="'Tiresias', sans-serif">Tiresias</option>
+              <option value="'Calibri', sans-serif">Calibri</option>
+              <option value="'Atkinson Hyperlegible', sans-serif">Atkinson Hyperlegible</option>
+              <option value="'Century Gothic', sans-serif">Century Gothic</option>
+              <option value="'Open Sans', sans-serif">Open Sans</option>
             </select>
 
             {/* Font Size Controls */}
@@ -265,10 +329,9 @@ const Note: React.FC = () => {
               />
             </div>
 
-            {/* Separator */}
             <span className="text-gray-400">•</span>
 
-            {/* Bold, Italic, Underline */}
+            {/* Bold, Italic, Underline Buttons */}
             <button
               onClick={() => setIsBold(!isBold)}
               className={`text-sm border rounded px-2 py-1 ${isBold ? "bg-blue-100 font-bold" : ""}`}
@@ -291,7 +354,6 @@ const Note: React.FC = () => {
               U
             </button>
 
-            {/* Separator */}
             <span className="text-gray-400">•</span>
 
             {/* Text Color Picker */}
@@ -316,7 +378,6 @@ const Note: React.FC = () => {
               />
             </div>
 
-            {/* Separator */}
             <span className="text-gray-400">•</span>
 
             {/* Line Height Controls */}
@@ -344,7 +405,6 @@ const Note: React.FC = () => {
               />
             </div>
 
-            {/* Separator */}
             <span className="text-gray-400">•</span>
 
             {/* Alignment Controls */}
@@ -379,7 +439,6 @@ const Note: React.FC = () => {
               </button>
             </div>
 
-            {/* Separator */}
             <span className="text-gray-400">•</span>
 
             {/* Chunk Size Controls */}
@@ -395,10 +454,9 @@ const Note: React.FC = () => {
               <span className="text-sm">words</span>
             </div>
 
-            {/* Separator */}
             <span className="text-gray-400">•</span>
 
-            {/* Save Preset button */}
+            {/* Save Preset Button */}
             <button
               onClick={handleSavePreset}
               className="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center space-x-1"
@@ -412,7 +470,7 @@ const Note: React.FC = () => {
         </>
       )}
 
-      {/* Note content display / editing area */}
+      {/* Note Content Display / Editing Area */}
       {isEditing ? (
         <textarea
           value={editedChunk}
@@ -429,13 +487,12 @@ const Note: React.FC = () => {
         </div>
       )}
 
-      {/* Pagination and audio generation controls */}
+      {/* Pagination and Audio Generation Controls */}
       {chunks.length > 0 && (
         <div className="mt-6">
           <div className="text-center mt-4 text-sm text-gray-600">
             Page {currentChunkIndex + 1} of {chunks.length}
           </div>
-
           <div className="flex justify-between mt-4">
             <button
               onClick={handlePrevChunk}
@@ -460,7 +517,6 @@ const Note: React.FC = () => {
               Next
             </button>
           </div>
-
           <div className="mt-4">
             <button
               onClick={handleGenerateAudio}
