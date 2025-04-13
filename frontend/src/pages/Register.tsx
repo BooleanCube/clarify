@@ -71,7 +71,7 @@ const Register: React.FC = () => {
 
         <button
           onClick={handleSignUpWithGoogle}
-          className="w-full justify-center items-center flex bg-pearl font-semibold py-1 rounded-2xl border-[1.5px] mb-6 hover:shadow-lg transition"
+          className="w-full justify-center items-center flex bg-pearl font-semibold py-1 rounded-2xl border-[1.5px] mb-6 hover:shadow-lg transition cursor-pointer"
         >
           <img src={Google} alt="Google" className="mr-2" />
           Sign up with Google
@@ -134,7 +134,7 @@ const Register: React.FC = () => {
             <Button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3/5 transform -translate-y-1/5 text-sm font-semibold bg-transparent text-black p-0 m-0"
+              className="absolute right-3 top-3/5 transform -translate-y-1/5 text-sm font-semibold bg-transparent text-black p-0 m-0 cursor-pointer"
             >
               {showPassword ? "Hide" : "Show"}
             </Button>
@@ -154,7 +154,7 @@ const Register: React.FC = () => {
             <Button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-3/5 transform -translate-y-1/5 text-sm font-semibold bg-transparent text-black p-0 m-0"
+              className="absolute right-3 top-3/5 transform -translate-y-1/5 text-sm font-semibold bg-transparent text-black p-0 m-0 cursor-pointer"
             >
               {showConfirmPassword ? "Hide" : "Show"}
             </Button>
@@ -163,7 +163,7 @@ const Register: React.FC = () => {
           <div className="flex justify-center pt-4 pb-2">
             <Button
               type="submit"
-              className="bg-lightgray/30 border-[1.5px] border-black hover:bg-darkgray/30 w-40 font-semibold py-3 rounded-full shadow-md text-black transition"
+              className="bg-lightgray/30 border-[1.5px] border-black hover:bg-darkgray/30 w-40 font-semibold py-3 rounded-full shadow-md text-black transition cursor-pointer"
             >
               Register
             </Button>
