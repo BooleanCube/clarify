@@ -31,6 +31,10 @@ const Dashboard: React.FC = () => {
   // add function to do button shit
   const [isModalOpen, setisModalOpen] = useState<boolean>(false);
 
+  // function to do names steps
+  const [noteName, setNoteName] = useState<string>("");
+  const [modalStep, setModalStep] = useState<"enterName" | "selectOption">("enterName");
+
   const openModal = () => {
     console.log("open modal")
     setisModalOpen(true);
@@ -39,13 +43,15 @@ const Dashboard: React.FC = () => {
   const closeModal = () => {
     console.log("close modal")
     setisModalOpen(false);
+    setModalStep("enterName");
+    setNoteName("");
   }
 
   const handleOptionSelect = (option: string) => {
-    console.log(`Selected option: ${option}`);
+    console.log(`Selected option: ${option}, Note name: ${noteName}`);
     closeModal();
     // Navigate to the new note page with the selected option
-    navigate("/new", {state: {selectedOption: option}});
+    navigate("/new", {state: {selectedOption: option, noteName}});
   } 
 
   const fetchNotes = async () => {
@@ -374,89 +380,136 @@ const Dashboard: React.FC = () => {
               + New Note
             </button>
             {/* Modal for adding a new note */}
-            {isModalOpen && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-                  <h2 className="text-lg font-bold mb-4">Select an Option</h2>
-                  <div className="space-y-4">
+          {isModalOpen && (
+           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                {modalStep === "enterName" ? (
+                  // Step 1: Enter Note Name
+                  <>
+                    <h2 className="text-lg font-bold mb-4">Enter a Name for Your Note</h2>
+                    <input
+                      type="text"
+                      value={noteName}
+                      onChange={(e) => setNoteName(e.target.value)}
+                      placeholder="Note Name"
+                      className="w-full border border-gray-300 px-3 py-2 rounded mb-4 focus:outline-none"
+                    />
                     <button
                       className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                      onClick={() => handleOptionSelect("Document")}
-                    > Document </button>
+                      onClick={() => {
+                        if (noteName.trim() === "") {
+                          alert("Please enter a name for your note.");
+                          return;
+                        }
+                        setModalStep("selectOption"); // Move to the next step
+                      }}
+                    >
+                      Next
+                    </button>
                     <button
-                      className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                      onClick={() => handleOptionSelect("Image")}
-                    > Image </button>
+                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  // Step 2: Select Option
+                  <>
+                    <h2 className="text-lg font-bold mb-4">Select an Option</h2>
+                    <div className="space-y-4">
+                      <button
+                        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                        onClick={() => handleOptionSelect("Document")}
+                      >
+                        Document
+                      </button>
+                      <button
+                        className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                        onClick={() => handleOptionSelect("Image")}
+                      >
+                        Image
+                      </button>
+                      <button
+                        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                        onClick={() => handleOptionSelect("Text")}
+                      >
+                        Text
+                      </button>
+                    </div>
                     <button
-                      className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
-                      onClick={() => handleOptionSelect("Text")}
-                    > Text </button>
-                  </div>
-                  <button
-                    className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
-                    onClick={closeModal}
-                  > Cancel </button>
-                </div>
+                      className="mt-4 w-full bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
               </div>
-            )}
+            </div>
+          )}
           </div>
           {/* Render filtered notes for main content */}
           <div className="space-y-4">
             {filteredNotes.map((note: Note) => {
               if(showFavorites && !note.favorite) return (<></>)
+                
               return (
-                <div
-                  key={note.id}
-                  className="bg-white p-4 rounded shadow relative"
-                >
-                  {/* Note Title & Dots Menu Button */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold">{note.title}</div>
-                    <div className="relative">
-                      <button
-                        className="text-gray-500 hover:text-gray-700 px-2"
-                        onClick={() => toggleMenu(note.id)}
-                      >
-                        <span className="text-xl font-bold">...</span>
-                      </button>
-                      {openMenus[note.id] && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
-                          <button
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => handleAddNoteTag(note.id)}
-                          >
-                            Add Tag
-                          </button>
-                          <button
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => handleFavorite(note.id)}
-                          >
-                            {note.favorite
-                              ? "Unfavorite"
-                              : "Favorite"}
-                          </button>
-                          <button
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => handleDelete(note.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                <Link to={`/note/${note.id}`} className="cursor-pointer p-4" key={note.id}>
+                  <div
+                    key={note.id}
+                    className="bg-white p-4 rounded shadow relative"
+                  >
+                    {/* Note Title & Dots Menu Button */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold">{note.title}</div>
+                      <div className="relative">
+                        <button
+                          className="text-gray-500 hover:text-gray-700 px-2"
+                          onClick={() => toggleMenu(note.id)}
+                        >
+                          <span className="text-xl font-bold">...</span>
+                        </button>
+                        {openMenus[note.id] && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                              onClick={() => handleAddNoteTag(note.id)}
+                            >
+                              Add Tag
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                              onClick={() => handleFavorite(note.id)}
+                            >
+                              {note.favorite
+                                ? "Unfavorite"
+                                : "Favorite"}
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                              onClick={() => handleDelete(note.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600">{note.content}</p>
+                    <div className="mt-2 flex space-x-2">
+                      {note.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-block bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">{note.content}</p>
-                  <div className="mt-2 flex space-x-2">
-                    {note.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block bg-gray-200 text-blue-700 px-2 py-1 rounded text-xs"
-                      >
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                </Link>
+                
               )
             })}
           </div>

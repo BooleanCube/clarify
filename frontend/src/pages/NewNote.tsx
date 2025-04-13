@@ -16,8 +16,9 @@ const NewNote = () => {
   const { session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedOption } = location.state || { selectedOption: null };
+  const { selectedOption, noteName } = location.state || { selectedOption: null, noteName: "" };
   //console.log("Selected option from location state:", selectedOption);
+  console.log("Note name from location state:", noteName);
 
   // different states (doc, image, text)
   const [imageContent, setImageContent] = useState<string>("");
@@ -195,7 +196,7 @@ const NewNote = () => {
         profile_id: session?.user.id,
         preset_id: 1,
         content: content,
-        name: `New ${selectedOption} Note`, // Dynamic name based on type
+        name: noteName, // Dynamic name based on type
         favorite: false,
       })
       .select("*");
