@@ -365,7 +365,7 @@ const Dashboard: React.FC = () => {
         `}
       >
         {/* Sticky Header for Dashboard Title & Global Controls */}
-        <header className="sticky pt-30 top-0 shadow-lg z-30 bg-gray-100/90 border-b border-gray-200 p-4">
+        <header className="sticky pt-30 top-0 px-12 shadow-lg z-30 bg-gray-100/90 border-b border-gray-200 p-4">
           <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -394,7 +394,7 @@ const Dashboard: React.FC = () => {
                 </span>
               ))}
               <button
-                className="bg-black text-white px-4 py-2 ml-2 rounded-lg hover:bg-gray-800"
+                className="bg-black text-white px-4 py-1.5 rounded-full hover:bg-gray-800"
                 onClick={handleAddTag}
               >
                 + New
@@ -414,13 +414,13 @@ const Dashboard: React.FC = () => {
         </header>
 
         {/* Scrollable Notes Area */}
-        <main className="flex-1 overflow-auto p-4">
+        <main className="flex-1 p-12 overflow-auto">
           <div className="bg-white/30 p-4 rounded-lg border-[1.5px] shadow mb-4 flex items-center justify-center cursor-pointer hover:shadow-lg hover:bg-white/60 hover:-translate-y-0.5 transition-all duration-200">
             <button className="text-3xl tracking-wider py-6 font-semibold" onClick={openModal}>
               + New Note
             </button>
             {isModalOpen && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="fixed inset-0 bg-black-100 bg-transparent backdrop-blur-md flex items-center justify-center z-50">
                 <div className="bg-white rounded-lg shadow-lg p-6 w-96">
                   {modalStep === "enterName" ? (
                     <>
@@ -539,7 +539,7 @@ const Dashboard: React.FC = () => {
                     {openMenus[note.id] && (
                       <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
                         <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAddNoteTag(note.id);
@@ -548,7 +548,7 @@ const Dashboard: React.FC = () => {
                           Add Tag
                         </button>
                         <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleFavorite(note.id);
@@ -557,7 +557,7 @@ const Dashboard: React.FC = () => {
                           {note.favorite ? "Unfavorite" : "Favorite"}
                         </button>
                         <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(note.id);
