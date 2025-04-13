@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import supabase from "@/supabase-client";
 import { useAuth } from "@/middleware";
 import { Link, useNavigate } from "react-router-dom";
-import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
+import { FiSidebar, FiHome, FiTrash2 } from "react-icons/fi";
 import { CgNotes } from "react-icons/cg";
 import { GrSearch } from "react-icons/gr";
 import UploadStep from "@/components/UploadStep";
-// import { FiSidebar, FiHeart, FiHome, FiTrash2 } from "react-icons/fi";
-// import { CgNotes } from "react-icons/cg";
-// import { GrSearch } from "react-icons/gr";
+import { AiOutlineHeart, AiFillHeart } from "react-icons/ai"; // New heart icons
 
 interface Tag {
   id: number;
@@ -62,15 +60,13 @@ const Dashboard: React.FC = () => {
     console.log(`Selected option: ${option}, Note name: ${noteName}`);
     setSelectedOption(option as "Document" | "Image" | "Text");
     setModalStep("upload");
-    // closeModal();
-    // navigate("/new", { state: { selectedOption: option, noteName } });
   };
 
   const handleNoteCreated = (noteId: string) => {
     console.log(`Note created with ID: ${noteId}`);
     closeModal();
     navigate(`/note/${noteId}`);
-  }
+  };
 
   const fetchNotes = async () => {
     const { data, error } = await supabase
@@ -265,6 +261,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Toggle favorite status for a note
   const handleFavorite = async (noteId: number) => {
     const targetNote = notes.find((note) => note.id === noteId);
     if (!targetNote) return;
@@ -321,9 +318,10 @@ const Dashboard: React.FC = () => {
         `}
       >
         <div
-          className={`flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200 ${
-            showSidebar ? "px-4" : "justify-center"
-          }`}
+          className={`
+            flex items-center py-4 cursor-pointer hover:bg-white/30 transition-all duration-200
+            ${showSidebar ? "px-4" : "justify-center"}
+          `}
         >
           <button onClick={() => setShowSidebar((prev) => !prev)} className="cursor-pointer">
             <FiSidebar size={22} />
@@ -333,20 +331,22 @@ const Dashboard: React.FC = () => {
         <nav className="flex flex-col">
           <button
             onClick={() => navigate("/dashboard")}
-            className={`w-full px-4 hover:cursor-pointer py-4 hover:bg-white/30 transition-all duration-200 ${
-              showSidebar ? "flex items-center space-x-2" : "flex justify-center"
-            }`}
+            className={`
+              w-full px-4 hover:cursor-pointer py-4 hover:bg-white/30 transition-all duration-200
+              ${showSidebar ? "flex items-center space-x-2" : "flex justify-center"}
+            `}
           >
             <FiHome size={20} />
             {showSidebar && <span className="tracking-wide">Dashboard</span>}
           </button>
           <button
             onClick={() => setShowFavorites((prev) => !prev)}
-            className={`w-full px-4 py-4 hover:bg-white/30 transition-all duration-200 ${
-              showSidebar ? "flex items-center space-x-2" : "flex justify-center"
-            }`}
+            className={`
+              w-full px-4 py-4 hover:bg-white/30 transition-all duration-200
+              ${showSidebar ? "flex items-center space-x-2" : "flex justify-center"}
+            `}
           >
-            <FiHeart size={20} />
+            <FiTrash2 /> {/* You can remove this if you don't want a heart in the sidebar */}
             {showSidebar && <span className="tracking-wide">Favorites</span>}
           </button>
           <span className="mb-5"></span>
@@ -378,7 +378,8 @@ const Dashboard: React.FC = () => {
       {/* Main Content */}
       <div
         className={`
-          flex-1 flex flex-col transition-all ease-in duration-400 ${showSidebar ? "md:ml-64" : "md:ml-20"}
+          flex-1 flex flex-col transition-all ease-in duration-400
+          ${showSidebar ? "md:ml-64" : "md:ml-20"}
         `}
       >
         {/* Sticky Header for Dashboard Title & Global Controls */}
@@ -389,14 +390,11 @@ const Dashboard: React.FC = () => {
               {tags.map((tag: Tag) => (
                 <span
                   key={tag.id}
-                  onClick={() =>
-                    setActiveTag(activeTag?.id === tag.id ? null : tag)
-                  }
-                  className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full ${
-                    activeTag?.id === tag.id
+                  onClick={() => setActiveTag(activeTag?.id === tag.id ? null : tag)}
+                  className={`cursor-pointer inline-flex items-center px-3 py-1 rounded-full ${activeTag?.id === tag.id
                       ? "bg-black text-white"
                       : "bg-white border-[1.5px] text-black"
-                  }`}
+                    }`}
                 >
                   {tag.name}
                   {activeTag?.id === tag.id && (
@@ -432,7 +430,7 @@ const Dashboard: React.FC = () => {
 
         {/* Scrollable Notes Area */}
         <main className="flex-1 p-12 overflow-auto">
-        {isModalOpen && (
+          {isModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-lg p-6 w-96">
                 {modalStep === "enterName" ? (
@@ -534,17 +532,30 @@ const Dashboard: React.FC = () => {
                           className="inline-flex items-center px-3 py-1 rounded-full bg-white border-[1.5px] text-black text-xs"
                         >
                           {tag.name}
-                          <FiTrash2
-                            className="ml-1 hover:text-red-500 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteNoteTag(note.id, tag.id);
-                            }}
-                          />
                         </span>
                       ))}
                     </div>
                   </Link>
+                  {/* Heart icon at the bottom right */}
+                  <div className="absolute bottom-2 right-2">
+                    {note.favorite ? (
+                      <AiFillHeart
+                        className="text-red-500 w-6 h-6 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFavorite(note.id);
+                        }}
+                      />
+                    ) : (
+                      <AiOutlineHeart
+                        className="text-gray-500 w-6 h-6 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFavorite(note.id);
+                        }}
+                      />
+                    )}
+                  </div>
                   <div className="absolute top-2 right-2">
                     <button
                       className="text-gray-500 hover:text-gray-700 px-2"
@@ -570,15 +581,6 @@ const Dashboard: React.FC = () => {
                           className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleFavorite(note.id);
-                          }}
-                        >
-                          {note.favorite ? "Unfavorite" : "Favorite"}
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-black/15 hover:cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
                             handleDelete(note.id);
                           }}
                         >
@@ -586,14 +588,14 @@ const Dashboard: React.FC = () => {
                         </button>
                       </div>
                     )}
-                  </div>  
+                  </div>
                 </div>
               );
             })}
           </div>
         </main>
       </div>
-    </div>    
+    </div>
   );
 };
 
