@@ -10,6 +10,7 @@ const groq = new Groq({
 });
 
 interface NoteProps {
+  id: number;
   name: string;
   content: string;
   favorite: boolean;
@@ -21,6 +22,7 @@ const Note: React.FC = () => {
 
   const [note, setNote] = useState<NoteProps | null>(null);
 
+  // Formatting and styling state
   const [fontSize, setFontSize] = useState<number>(16);
   const [lineHeight, setLineHeight] = useState<number>(1.5);
   const [letterSpacing, setLetterSpacing] = useState<number>(0);
@@ -28,12 +30,13 @@ const Note: React.FC = () => {
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   const [fontFamily, setFontFamily] = useState<string>("Garamond");
 
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
+  const [isBold, setIsBold] = useState<boolean>(false);
+  const [isItalic, setIsItalic] = useState<boolean>(false);
+  const [isUnderline, setIsUnderline] = useState<boolean>(false);
 
   const [alignment, setAlignment] = useState<"left" | "center" | "right" | "justify">("left");
 
+  // Chunking and audio generation states
   const [chunkSize, setChunkSize] = useState<number>(30);
   const [chunks, setChunks] = useState<string[]>([]);
   const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0);
@@ -41,6 +44,11 @@ const Note: React.FC = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<boolean>(false);
 
+  // Editing state for a single chunk (instead of whole note)
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editedChunk, setEditedChunk] = useState<string>("");
+
+  // Fetch note data from Supabase based on URL ID
   useEffect(() => {
     async function fetchNoteContent() {
       let path = location.pathname;
@@ -65,17 +73,18 @@ const Note: React.FC = () => {
         .single();
 
       if (error) {
-        console.error("Error fetching note content:", error)
-        alert(error)
-      } else {
-        setNote(data)
+        console.error("Error fetching note content:", error);
+        alert(error.message);
+      } else if (data) {
+        setNote(data);
       }
     }
 
     fetchNoteContent();
   }, [location, navigate]);
 
-  // Split note content by fixed word count while preserving original whitespace:
+  // Split note content into chunks whenever note content or chunkSize changes.
+  // We do not include any state from editing mode so that the chunks always reflect the saved note.
   useEffect(() => {
     if (note) {
       const parts = note.content.match(/(\S+\s*)/g);
@@ -85,19 +94,21 @@ const Note: React.FC = () => {
           newChunks.push(parts.slice(i, i + chunkSize).join(""));
         }
         setChunks(newChunks);
-        setCurrentChunkIndex(0);
+        // Ensure currentChunkIndex is valid
+        if (currentChunkIndex >= newChunks.length) {
+          setCurrentChunkIndex(0);
+        }
       }
     }
-  }, [chunkSize, note]);
-
+  }, [note, chunkSize, currentChunkIndex]);
 
   const handlePrevChunk = () => {
-    if (currentChunkIndex > 0) {
+    if (currentChunkIndex > 0 && !isEditing) {
       setCurrentChunkIndex((idx) => idx - 1);
     }
   };
   const handleNextChunk = () => {
-    if (currentChunkIndex < chunks.length - 1) {
+    if (currentChunkIndex < chunks.length - 1 && !isEditing) {
       setCurrentChunkIndex((idx) => idx + 1);
     }
   };
@@ -130,11 +141,49 @@ const Note: React.FC = () => {
     }
   };
 
-  // Save Preset (stub)
+  // Save Preset (stub function)
   const handleSavePreset = () => {
     alert("Preset saved! (This is a stub function.)");
   };
 
+  // When the user clicks Edit, start editing the current chunk only.
+  const handleEditChunk = () => {
+    if (chunks[currentChunkIndex] !== undefined) {
+      setIsEditing(true);
+      setEditedChunk(chunks[currentChunkIndex]);
+    }
+  };
+
+  // Save the edited chunk by merging it into the full note content and updating Supabase.
+  const handleSaveChunk = async () => {
+    if (!note) return;
+    // Replace the current chunk with the edited text.
+    const updatedChunks = [...chunks];
+    updatedChunks[currentChunkIndex] = editedChunk;
+    // Reassemble full note content.
+    const newContent = updatedChunks.join("");
+    const { error } = await supabase
+      .from("notes")
+      .update({ content: newContent })
+      .eq("id", note.id);
+    if (error) {
+      console.error("Error updating note content:", error);
+      alert("Failed to save note.");
+      return;
+    }
+    // Update the local note state with new content.
+    setNote({ ...note, content: newContent });
+    setChunks(updatedChunks);
+    setIsEditing(false);
+  };
+
+  // Cancel chunk editing
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedChunk("");
+  };
+
+  // Define styling for the note/text preview area.
   const textChunkStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
     lineHeight: lineHeight,
@@ -158,7 +207,34 @@ const Note: React.FC = () => {
         <>
           <h2 className="mt-24 text-xl font-semibold text-center">{note.name}</h2>
 
-          {/* Toolbar that matches the new look */}
+          {/* Chunk editing controls */}
+          <div className="mt-2 text-center space-x-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleSaveChunk}
+                  className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+                >
+                  Save Chunk
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleEditChunk}
+                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+              >
+                Edit Chunk
+              </button>
+            )}
+          </div>
+
+          {/* Toolbar with formatting controls */}
           <div className="mt-6 flex flex-wrap items-center gap-3 bg-gray-100 p-2 rounded justify-center">
             {/* Font Family Dropdown */}
             <select
@@ -192,30 +268,24 @@ const Note: React.FC = () => {
             {/* Separator */}
             <span className="text-gray-400">•</span>
 
-            {/* Bold / Italic / Underline */}
+            {/* Bold, Italic, Underline */}
             <button
               onClick={() => setIsBold(!isBold)}
-              className={`text-sm border rounded px-2 py-1 ${
-                isBold ? "bg-blue-100 font-bold" : ""
-              }`}
+              className={`text-sm border rounded px-2 py-1 ${isBold ? "bg-blue-100 font-bold" : ""}`}
               title="Bold"
             >
               B
             </button>
             <button
               onClick={() => setIsItalic(!isItalic)}
-              className={`text-sm border rounded px-2 py-1 ${
-                isItalic ? "bg-blue-100 italic" : ""
-              }`}
+              className={`text-sm border rounded px-2 py-1 ${isItalic ? "bg-blue-100 italic" : ""}`}
               title="Italic"
             >
               I
             </button>
             <button
               onClick={() => setIsUnderline(!isUnderline)}
-              className={`text-sm border rounded px-2 py-1 ${
-                isUnderline ? "bg-blue-100 underline" : ""
-              }`}
+              className={`text-sm border rounded px-2 py-1 ${isUnderline ? "bg-blue-100 underline" : ""}`}
               title="Underline"
             >
               U
@@ -224,7 +294,7 @@ const Note: React.FC = () => {
             {/* Separator */}
             <span className="text-gray-400">•</span>
 
-            {/* Text Color (A icon) */}
+            {/* Text Color Picker */}
             <div className="flex items-center space-x-1" title="Text Color">
               <span className="text-sm font-semibold">A</span>
               <input
@@ -235,7 +305,7 @@ const Note: React.FC = () => {
               />
             </div>
 
-            {/* Background Color Icon (paintbrush or paint drip) */}
+            {/* Background Color Picker */}
             <div className="flex items-center space-x-1" title="Background Color">
               <i className="fas fa-fill-drip text-sm" />
               <input
@@ -277,40 +347,32 @@ const Note: React.FC = () => {
             {/* Separator */}
             <span className="text-gray-400">•</span>
 
-            {/* Alignment Icons */}
+            {/* Alignment Controls */}
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => setAlignment("left")}
-                className={`text-sm border rounded px-2 py-1 ${
-                  alignment === "left" ? "bg-blue-100" : ""
-                }`}
+                className={`text-sm border rounded px-2 py-1 ${alignment === "left" ? "bg-blue-100" : ""}`}
                 title="Align Left"
               >
                 <i className="fas fa-align-left" />
               </button>
               <button
                 onClick={() => setAlignment("center")}
-                className={`text-sm border rounded px-2 py-1 ${
-                  alignment === "center" ? "bg-blue-100" : ""
-                }`}
+                className={`text-sm border rounded px-2 py-1 ${alignment === "center" ? "bg-blue-100" : ""}`}
                 title="Align Center"
               >
                 <i className="fas fa-align-center" />
               </button>
               <button
                 onClick={() => setAlignment("right")}
-                className={`text-sm border rounded px-2 py-1 ${
-                  alignment === "right" ? "bg-blue-100" : ""
-                }`}
+                className={`text-sm border rounded px-2 py-1 ${alignment === "right" ? "bg-blue-100" : ""}`}
                 title="Align Right"
               >
                 <i className="fas fa-align-right" />
               </button>
               <button
                 onClick={() => setAlignment("justify")}
-                className={`text-sm border rounded px-2 py-1 ${
-                  alignment === "justify" ? "bg-blue-100" : ""
-                }`}
+                className={`text-sm border rounded px-2 py-1 ${alignment === "justify" ? "bg-blue-100" : ""}`}
                 title="Justify"
               >
                 <i className="fas fa-align-justify" />
@@ -341,13 +403,7 @@ const Note: React.FC = () => {
               onClick={handleSavePreset}
               className="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center space-x-1"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               <span>Save Preset</span>
@@ -356,16 +412,26 @@ const Note: React.FC = () => {
         </>
       )}
 
+      {/* Note content display / editing area */}
+      {isEditing ? (
+        <textarea
+          value={editedChunk}
+          onChange={(e) => setEditedChunk(e.target.value)}
+          style={textChunkStyle}
+          className="w-full h-64 p-4 border border-gray-300 rounded-lg mt-6"
+        />
+      ) : (
+        <div
+          className="text-gray-700 whitespace-pre-wrap text-start border border-gray-300 p-4 rounded-lg mt-6"
+          style={textChunkStyle}
+        >
+          {chunks[currentChunkIndex]}
+        </div>
+      )}
+
+      {/* Pagination and audio generation controls */}
       {chunks.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-lg font-semibold">Extracted Text (Chunk):</h2>
-          <div
-            className="text-gray-700 whitespace-pre-wrap text-start border border-gray-300 p-4 rounded-lg"
-            style={textChunkStyle}
-          >
-            {chunks[currentChunkIndex]}
-          </div>
-
           <div className="text-center mt-4 text-sm text-gray-600">
             Page {currentChunkIndex + 1} of {chunks.length}
           </div>
@@ -373,9 +439,9 @@ const Note: React.FC = () => {
           <div className="flex justify-between mt-4">
             <button
               onClick={handlePrevChunk}
-              disabled={currentChunkIndex === 0}
+              disabled={isEditing || currentChunkIndex === 0}
               className={`py-2 px-4 rounded-lg ${
-                currentChunkIndex === 0
+                currentChunkIndex === 0 || isEditing
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
@@ -384,9 +450,9 @@ const Note: React.FC = () => {
             </button>
             <button
               onClick={handleNextChunk}
-              disabled={currentChunkIndex === chunks.length - 1}
+              disabled={isEditing || currentChunkIndex === chunks.length - 1}
               className={`py-2 px-4 rounded-lg ${
-                currentChunkIndex === chunks.length - 1
+                currentChunkIndex === chunks.length - 1 || isEditing
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
