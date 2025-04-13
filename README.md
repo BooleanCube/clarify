@@ -1,2 +1,1 @@
 # clarify
-Dyslexia Reader Application
