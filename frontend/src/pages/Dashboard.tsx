@@ -461,7 +461,7 @@ const Dashboard: React.FC = () => {
                       {note.tags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center px-3 py-1 rounded-full bg-white border-[1.5px] text-black text-xs"
+                          className="inline-flex items-center cursor-default px-3 py-1 rounded-full bg-white border-[1.5px] text-black text-xs"
                         >
                           {tag.name}
                         </span>
@@ -472,7 +472,7 @@ const Dashboard: React.FC = () => {
                   <div className="absolute bottom-2 right-2">
                     {note.favorite ? (
                       <AiFillHeart
-                        className="text-red-500 w-6 h-6 cursor-pointer"
+                        className="text-red-600 w-6 h-6 cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleFavorite(note.id);

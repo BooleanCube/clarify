@@ -33,11 +33,11 @@ const Navbar = () => {
 
   const AuthDropdown = () => (
     <div className="relative group">
-      <button className="nav-color tracking-wide">{name}</button>
+      <button className="nav-color tracking-wide !shadow-none">{name}</button>
       <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
         <button
           onClick={handleLogout}
-          className="block w-full font-bold tracking-wide text-left px-4 py-2 text-sm hover:bg-gray-100"
+          className="block w-full hover:text-red-900 cursor-pointer rounded-md font-bold tracking-wide text-left px-4 py-2 text-sm hover:bg-gray-100"
         >
           Logout
         </button>
@@ -59,7 +59,6 @@ const Navbar = () => {
         <div className="hidden md:flex mr-8 lg:mr-[80px] tracking-wide items-center space-x-6 text-md">
           <Link to="/#home" className="nav-color font-bold tracking-wide nav-link">Home</Link>
           <Link to="/#about" className="nav-color font-bold tracking-wide nav-link">About</Link>
-
           {session ? (
             <>
               <Link to="/dashboard" className="nav-color font-bold tracking-wide nav-link">
@@ -85,7 +84,7 @@ const Navbar = () => {
       <ul
         className={`fixed top-0 right-0 w-full h-full flex flex-col items-center justify-start space-y-8 transform transition-all duration-500 ease-in-out ${
           nav ? "translate-x-0" : "translate-x-full"
-        } md:hidden bg-white z-40`}
+        } md:hidden bg-lightgray z-40`}
       >
         <li className="absolute top-6 right-6">
           <AiOutlineClose size={28} className="cursor-pointer" onClick={handleNav} />
@@ -93,19 +92,14 @@ const Navbar = () => {
         <li className="text-md tracking-wide translate-y-20">
           <Link to="/" onClick={handleNav} className="text-4xl">Home</Link>
         </li>
-        <li className="text-md tracking-wide translate-y-20">
-          <Link to="/about" onClick={handleNav} className="text-4xl">About</Link>
-        </li>
         {session ? (
           <>
-            <li className="text-md translate-y-20 text-3xl font-semibold">
-              {name}
-            </li>
+
             <li className="text-md translate-y-20">
               <Link to="/dashboard" onClick={handleNav} className="text-4xl tracking-wide">Dashboard</Link>
             </li>
             <li className="text-md tracking-wide translate-y-20">
-              <button onClick={handleLogout} className="text-4xl text-red-500">
+              <button onClick={handleLogout} className="text-4xl !shadow-none cursor-pointer text-red-900">
                 Logout
               </button>
             </li>
