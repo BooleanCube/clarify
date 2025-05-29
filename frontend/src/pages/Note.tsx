@@ -332,55 +332,86 @@ const Note: React.FC = () => {
   };
 
   // -- Generate audio ------------------------------------------------------------------
+  // const generateAudio = async (text: string) => {
+  //   setLoadingAudio(true);
+  //   try {
+  //     const apiKey = import.meta.env.VITE_GOOGLE_CLOUD_TTS_API_KEY;
+  //     if (!apiKey) {
+  //       console.error("Google Cloud TTS API key not found in environment variables.");
+  //       setLoadingAudio(false);
+  //       return;
+  //     }
+
+  //     const response = await fetch(
+  //       `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           input: { text: text },
+  //           voice: { languageCode: "en-US", name: "en-US-Neural2-A" },
+  //           audioConfig: { audioEncoding: "MP3" },
+  //         }),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       console.error("Error from Google Cloud TTS API:", errorData);
+  //       setLoadingAudio(false);
+  //       return;
+  //     }
+
+  //     const data = await response.json();
+  //     if (data.audioContent) {
+  //       const audioBlob = new Blob(
+  //         [Uint8Array.from(atob(data.audioContent), (c) => c.charCodeAt(0))],
+  //         { type: "audio/mp3" }
+  //       );
+  //       const url = URL.createObjectURL(audioBlob);
+  //       setAudioUrl(url);
+  //     } else {
+  //       console.error("No audio content received from Google Cloud TTS.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error calling Google Cloud TTS API:", error);
+  //   } finally {
+  //     setLoadingAudio(false);
+  //   }
+  // };
   const generateAudio = async (text: string) => {
+    console.log("Generating audio for text:", text);
     setLoadingAudio(true);
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_CLOUD_TTS_API_KEY;
-      if (!apiKey) {
-        console.error("Google Cloud TTS API key not found in environment variables.");
-        setLoadingAudio(false);
-        return;
+      if (!text.trim()){
+        throw new Error("No text provided for audio generation.");
       }
 
-      const response = await fetch(
-        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            input: { text: text },
-            voice: { languageCode: "en-US", name: "en-US-Neural2-A" },
-            audioConfig: { audioEncoding: "MP3" },
-          }),
-        }
-      );
+    const response = await groq.audio.speech.create({
+        model: "playai-tts",
+        voice: "Fritz-PlayAI",
+        input: text,
+      response_format: "wav"
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error from Google Cloud TTS API:", errorData);
-        setLoadingAudio(false);
-        return;
-      }
+    if (!response) {
+      throw new Error("No response received from Groq API.");
+    }
 
-      const data = await response.json();
-      if (data.audioContent) {
-        const audioBlob = new Blob(
-          [Uint8Array.from(atob(data.audioContent), (c) => c.charCodeAt(0))],
-          { type: "audio/mp3" }
-        );
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-      } else {
-        console.error("No audio content received from Google Cloud TTS.");
-      }
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBlob = new Blob([arrayBuffer], { type: 'audio/wav' });
+    const url = URL.createObjectURL(audioBlob);
+    setAudioUrl(url);
     } catch (error) {
-      console.error("Error calling Google Cloud TTS API:", error);
+      console.error("Error calling Groq API:", error);
+      alert("Failed to generate audio. Please try again later.");
     } finally {
       setLoadingAudio(false);
     }
-  };
+  }
 
   const handleGenerateAudio = () => {
+    console.log("Generating audio for current chunk:", currentChunkIndex);
     if (chunks[currentChunkIndex]) {
       generateAudio(chunks[currentChunkIndex]);
     } else {

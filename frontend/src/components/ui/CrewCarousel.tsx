@@ -69,18 +69,18 @@ const CrewCarousel = () => {
   const crewData = [
     { 
       name: "Kush Havinal", 
-      role: "Backend + API", 
+      role: "Backend + AI", 
       img: kush,
       github: "https://github.com/KushH305",
       linkedin: "https://www.linkedin.com/in/kush-havinal/",
-      email: "mailto:kushhavinal03@gmail.com"
+      email: "mailto:kush.havinal@gmail.com"
     },
     { 
       name: "Thashin Bhuiyan", 
       role: "UX/UI + Lead Frontend", 
       img: shin,
       github: "https://github.com/thashin04",
-      linkedin: "https://www.linkedin.com/in/thashin04/b",
+      linkedin: "https://www.linkedin.com/in/thashin04/",
       email: "mailto:thashinbhuiyan04@gmail.com"
     },
     { 
