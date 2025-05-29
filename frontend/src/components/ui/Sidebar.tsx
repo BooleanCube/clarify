@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           `}
         >
           <FiHeart size={20} />
-          {showSidebar && <span className="tracking-wide">Favorites</span>}
+          {showSidebar && <span className="tracking-wide cursor-pointer">Favorites</span>}
         </button>
         <span className="mb-5"></span>
         {showSidebar && (

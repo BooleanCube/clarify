@@ -4,6 +4,7 @@ import hero from "../assets/hero.svg";
 import bulb from "../assets/lightbulb.png";
 import sparkle from "../assets/titlesparkle.svg";
 import FeatureCarousel from "../components/ui/FeatureCarousel"
+import CrewCarousel from "../components/ui/CrewCarousel";
 
 import { useNavigate  } from "react-router-dom";
 import { useAuth } from "@/middleware";
@@ -99,6 +100,9 @@ const Home: React.FC = () => {
         
         </div>
         <iframe className="w-full h-96" src="https://www.youtube.com/embed/utsVPsdxm_s?si=R1Y9FBrkrmTctubb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </section>
+      <section>
+        <CrewCarousel />
       </section>
     </>
   );

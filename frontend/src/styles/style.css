@@ -34,3 +34,18 @@
   box-shadow: none !important;
   cursor: pointer;
 }
+.inline-none{
+  display:flex;
+  justify-content: center;
+}
+
+.inline-none img,
+.slick-slide img {
+  display: block !important;
+  margin: 0 auto;
+}
+.slick-slide {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}

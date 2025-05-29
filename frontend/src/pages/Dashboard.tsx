@@ -341,7 +341,7 @@ const Dashboard: React.FC = () => {
                 </span>
               ))}
               <button
-                className="bg-black text-white px-4 py-1.5 rounded-full hover:bg-gray-800"
+                className="bg-black text-white px-4 py-1.5 rounded-full hover:bg-gray-800 cursor-pointer"
                 onClick={handleAddTag}
               >
                 + New
