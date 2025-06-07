@@ -1,4 +1,4 @@
-# Clarify 📖✨
+# Clarify 📖✨ (https://clarify-three.vercel.app/)
 
 Clarify is a web application rapidly prototyped at **Hackabull 2025** (a 24-hour hackathon) 🚀 to enhance reading accessibility and comprehension for individuals with dyslexia and ADHD. It provides a suite of tools to customize the presentation of digital text, making reading a more comfortable and effective experience.
 
